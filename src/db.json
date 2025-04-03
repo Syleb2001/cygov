@@ -1,0 +1,331 @@
+{
+  "users": [
+    {
+      "companyName": "TEST",
+      "firstName": "Sylvain",
+      "lastName": "Lebailly",
+      "email": "sylvain.lebailly@anderson.be",
+      "password": "$2a$10$g3DIxA92nLTgodTj4II/e.SeklW94mnUqrzkDPzaqbTSuVvuG.BQi",
+      "cyfunLevel": "basic",
+      "id": "ed07ad25-690b-492f-b63f-e9a905217ec3",
+      "twoFactorSecret": "PJHHGY3YNUXDKQZIKB3UQ4TXEZRFMQB2LBYFE3JDIVVVEQCVGBSQ",
+      "twoFactorEnabled": true
+    },
+    {
+      "companyName": "CEPS",
+      "firstName": "John",
+      "lastName": "Doe",
+      "email": "admin@ceps.com",
+      "password": "$2a$10$eH0bITwqxwrCAV4u8NoG6eSROifoBhpDbv/FEeGmSmHGOSLUaaPAu",
+      "cyfunLevel": "basic",
+      "id": "f8d68f83-bf3a-4630-bcef-e18ebc5b78e7"
+    },
+    {
+      "companyName": "azerty",
+      "firstName": "kgoe",
+      "lastName": "fndl",
+      "email": "syl200126@gmail.com",
+      "password": "$2a$10$lGSSPJ/9ZO9lKAuCQ7jh3OT8taT5otKOO6qSpDvaCW4Z/a/hoX98.",
+      "cyfunLevel": "basic",
+      "id": "3029d179-d15c-4fdf-8438-550ed2c11a0c"
+    },
+    {
+      "companyName": "ANDERSON",
+      "firstName": "Sylvain",
+      "lastName": "Lebailly",
+      "email": "sylvain@anderson.be",
+      "password": "$2a$10$CVoXmN6o1iDancGXtp.h/uMMFFIkwbPb2cjV.45BItTLAzn21Me.G",
+      "cyfunLevel": "basic",
+      "id": "5bb28030-f154-4906-8841-9717ee152ef1",
+      "twoFactorSecret": "OBYEOSRXGVVTEOZFLZZXMUCBLUZTUI3NJZ2TAUTDOFSGQKJ2N54A",
+      "twoFactorEnabled": false
+    },
+    {
+      "companyName": "Bitopia",
+      "firstName": "Sylvain",
+      "lastName": "Lebailly",
+      "email": "sylvain@bitopia.ae",
+      "password": "$2a$10$n5IJ6OewtufDPGV8o3IQsOLaWiIDWqsVrGIgEPprel8QawqIrbjbW",
+      "cyfunLevel": "basic",
+      "id": "9b25825e-0476-44ac-9623-9ee9624751a6",
+      "twoFactorSecret": "HN4DUSDEGAVDK2KQIM3XUZCAOZCDEQ2HFR2EMNDYMEYGI43MKE5Q",
+      "twoFactorEnabled": false
+    }
+  ],
+  "controls": {
+    "ID.AM-1": {
+      "userStatuses": {
+        "f8d68f83-bf3a-4630-bcef-e18ebc5b78e7": "completed",
+        "ed07ad25-690b-492f-b63f-e9a905217ec3": "completed",
+        "3029d179-d15c-4fdf-8438-550ed2c11a0c": "completed",
+        "5bb28030-f154-4906-8841-9717ee152ef1": "completed",
+        "9b25825e-0476-44ac-9623-9ee9624751a6": "completed"
+      }
+    },
+    "ID.AM-2": {
+      "userStatuses": {
+        "ed07ad25-690b-492f-b63f-e9a905217ec3": "completed",
+        "f8d68f83-bf3a-4630-bcef-e18ebc5b78e7": "in-progress",
+        "5bb28030-f154-4906-8841-9717ee152ef1": "completed",
+        "9b25825e-0476-44ac-9623-9ee9624751a6": "completed"
+      }
+    },
+    "ID.AM-3": {
+      "userStatuses": {
+        "ed07ad25-690b-492f-b63f-e9a905217ec3": "completed",
+        "f8d68f83-bf3a-4630-bcef-e18ebc5b78e7": "completed",
+        "3029d179-d15c-4fdf-8438-550ed2c11a0c": "in-progress",
+        "5bb28030-f154-4906-8841-9717ee152ef1": "in-progress",
+        "9b25825e-0476-44ac-9623-9ee9624751a6": "completed"
+      }
+    },
+    "ID.GV-1": {
+      "userStatuses": {
+        "ed07ad25-690b-492f-b63f-e9a905217ec3": "completed",
+        "9b25825e-0476-44ac-9623-9ee9624751a6": "completed"
+      }
+    },
+    "RC.RP-1": {
+      "userStatuses": {
+        "f8d68f83-bf3a-4630-bcef-e18ebc5b78e7": "completed",
+        "ed07ad25-690b-492f-b63f-e9a905217ec3": "completed",
+        "9b25825e-0476-44ac-9623-9ee9624751a6": "completed"
+      }
+    },
+    "PR.AC-1": {
+      "userStatuses": {
+        "f8d68f83-bf3a-4630-bcef-e18ebc5b78e7": "completed",
+        "ed07ad25-690b-492f-b63f-e9a905217ec3": "in-progress",
+        "9b25825e-0476-44ac-9623-9ee9624751a6": "completed"
+      }
+    },
+    "PR.AC-2": {
+      "userStatuses": {
+        "f8d68f83-bf3a-4630-bcef-e18ebc5b78e7": "completed",
+        "ed07ad25-690b-492f-b63f-e9a905217ec3": "in-progress",
+        "9b25825e-0476-44ac-9623-9ee9624751a6": "completed"
+      }
+    },
+    "DE.AE-3": {
+      "userStatuses": {
+        "ed07ad25-690b-492f-b63f-e9a905217ec3": "completed"
+      }
+    },
+    "PR.AC-3": {
+      "userStatuses": {
+        "ed07ad25-690b-492f-b63f-e9a905217ec3": "completed",
+        "9b25825e-0476-44ac-9623-9ee9624751a6": "in-progress"
+      }
+    },
+    "DE.CM-1": {
+      "userStatuses": {
+        "ed07ad25-690b-492f-b63f-e9a905217ec3": "completed"
+      }
+    },
+    "PR.DS-1": {
+      "userStatuses": {
+        "ed07ad25-690b-492f-b63f-e9a905217ec3": "completed"
+      }
+    },
+    "ID.AM-4": {
+      "userStatuses": {
+        "ed07ad25-690b-492f-b63f-e9a905217ec3": "completed",
+        "5bb28030-f154-4906-8841-9717ee152ef1": "completed",
+        "9b25825e-0476-44ac-9623-9ee9624751a6": "completed"
+      }
+    },
+    "PR.PT-4": {
+      "userStatuses": {
+        "ed07ad25-690b-492f-b63f-e9a905217ec3": "pending",
+        "9b25825e-0476-44ac-9623-9ee9624751a6": "in-progress"
+      }
+    },
+    "PR.PT-1": {
+      "userStatuses": {
+        "ed07ad25-690b-492f-b63f-e9a905217ec3": "completed"
+      }
+    },
+    "PR.MA-1": {
+      "userStatuses": {
+        "ed07ad25-690b-492f-b63f-e9a905217ec3": "pending"
+      }
+    },
+    "PR.IP-11": {
+      "userStatuses": {
+        "ed07ad25-690b-492f-b63f-e9a905217ec3": "completed"
+      }
+    },
+    "PR.IP-4": {
+      "userStatuses": {
+        "ed07ad25-690b-492f-b63f-e9a905217ec3": "completed"
+      }
+    },
+    "PR.DS-7": {
+      "userStatuses": {
+        "ed07ad25-690b-492f-b63f-e9a905217ec3": "completed"
+      }
+    },
+    "PR.DS-2": {
+      "userStatuses": {
+        "ed07ad25-690b-492f-b63f-e9a905217ec3": "pending"
+      }
+    },
+    "PR.DS-3": {
+      "userStatuses": {
+        "ed07ad25-690b-492f-b63f-e9a905217ec3": "pending"
+      }
+    },
+    "PR.AT-1": {
+      "userStatuses": {
+        "ed07ad25-690b-492f-b63f-e9a905217ec3": "completed"
+      }
+    },
+    "PR.AC-5": {
+      "userStatuses": {
+        "ed07ad25-690b-492f-b63f-e9a905217ec3": "in-progress",
+        "9b25825e-0476-44ac-9623-9ee9624751a6": "completed"
+      }
+    },
+    "PR.AC-4": {
+      "userStatuses": {
+        "ed07ad25-690b-492f-b63f-e9a905217ec3": "completed",
+        "9b25825e-0476-44ac-9623-9ee9624751a6": "completed"
+      }
+    },
+    "DE.CM-3": {
+      "userStatuses": {
+        "ed07ad25-690b-492f-b63f-e9a905217ec3": "completed"
+      }
+    },
+    "DE.CM-4": {
+      "userStatuses": {
+        "ed07ad25-690b-492f-b63f-e9a905217ec3": "completed"
+      }
+    },
+    "RS.RP-1": {
+      "userStatuses": {
+        "ed07ad25-690b-492f-b63f-e9a905217ec3": "completed",
+        "9b25825e-0476-44ac-9623-9ee9624751a6": "completed"
+      }
+    },
+    "RS.CO-3": {
+      "userStatuses": {
+        "ed07ad25-690b-492f-b63f-e9a905217ec3": "completed",
+        "9b25825e-0476-44ac-9623-9ee9624751a6": "completed"
+      }
+    },
+    "RS.IM-1": {
+      "userStatuses": {
+        "ed07ad25-690b-492f-b63f-e9a905217ec3": "completed"
+      }
+    },
+    "ID.AM-5": {
+      "userStatuses": {
+        "ed07ad25-690b-492f-b63f-e9a905217ec3": "completed",
+        "3029d179-d15c-4fdf-8438-550ed2c11a0c": "completed",
+        "5bb28030-f154-4906-8841-9717ee152ef1": "completed",
+        "9b25825e-0476-44ac-9623-9ee9624751a6": "completed"
+      }
+    },
+    "ID.GV-3": {
+      "userStatuses": {
+        "ed07ad25-690b-492f-b63f-e9a905217ec3": "completed",
+        "9b25825e-0476-44ac-9623-9ee9624751a6": "completed"
+      }
+    },
+    "ID.GV-4": {
+      "userStatuses": {
+        "ed07ad25-690b-492f-b63f-e9a905217ec3": "completed",
+        "9b25825e-0476-44ac-9623-9ee9624751a6": "completed"
+      }
+    },
+    "ID.RA-1": {
+      "userStatuses": {
+        "ed07ad25-690b-492f-b63f-e9a905217ec3": "completed",
+        "5bb28030-f154-4906-8841-9717ee152ef1": "completed",
+        "9b25825e-0476-44ac-9623-9ee9624751a6": "completed"
+      }
+    },
+    "ID.RA-5": {
+      "userStatuses": {
+        "ed07ad25-690b-492f-b63f-e9a905217ec3": "completed",
+        "9b25825e-0476-44ac-9623-9ee9624751a6": "in-progress"
+      }
+    },
+    "RS.IM-11": {
+      "userStatuses": {
+        "9b25825e-0476-44ac-9623-9ee9624751a6": "completed"
+      }
+    },
+    "ID.AM-6": {
+      "userStatuses": {
+        "9b25825e-0476-44ac-9623-9ee9624751a6": "completed"
+      }
+    },
+    "ID.BE-1": {
+      "userStatuses": {
+        "9b25825e-0476-44ac-9623-9ee9624751a6": "in-progress"
+      }
+    },
+    "RC.CO-1": {
+      "userStatuses": {
+        "9b25825e-0476-44ac-9623-9ee9624751a6": "in-progress"
+      }
+    },
+    "RS.IM-2": {
+      "userStatuses": {
+        "9b25825e-0476-44ac-9623-9ee9624751a6": "completed"
+      }
+    },
+    "RS.AN-2": {
+      "userStatuses": {
+        "9b25825e-0476-44ac-9623-9ee9624751a6": "completed"
+      }
+    },
+    "RS.CO-1": {
+      "userStatuses": {
+        "9b25825e-0476-44ac-9623-9ee9624751a6": "completed"
+      }
+    },
+    "PR.PT-3": {
+      "userStatuses": {
+        "9b25825e-0476-44ac-9623-9ee9624751a6": "completed"
+      }
+    },
+    "PR.PT-2": {
+      "userStatuses": {
+        "9b25825e-0476-44ac-9623-9ee9624751a6": "completed"
+      }
+    },
+    "RC.CO-3": {
+      "userStatuses": {
+        "9b25825e-0476-44ac-9623-9ee9624751a6": "completed"
+      }
+    },
+    "ID.BE-2": {
+      "userStatuses": {
+        "9b25825e-0476-44ac-9623-9ee9624751a6": "completed"
+      }
+    },
+    "ID.BE-3": {
+      "userStatuses": {
+        "9b25825e-0476-44ac-9623-9ee9624751a6": "in-progress"
+      }
+    },
+    "ID.AM-1.1": {
+      "userStatuses": {
+        "9b25825e-0476-44ac-9623-9ee9624751a6": "completed"
+      }
+    },
+    "ID.RA-1.1": {
+      "userStatuses": {
+        "9b25825e-0476-44ac-9623-9ee9624751a6": "completed"
+      }
+    },
+    "ID.RA-5.1": {
+      "userStatuses": {
+        "9b25825e-0476-44ac-9623-9ee9624751a6": "completed"
+      }
+    }
+  }
+}

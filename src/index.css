@@ -1,0 +1,49 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Tree Lines Styling */
+.tree-parent {
+  position: relative;
+}
+
+.tree-line {
+  position: relative;
+  padding-left: 24px;
+}
+
+.tree-line::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background-color: #e5e7eb;
+}
+
+.tree-line::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 24px;
+  width: 24px;
+  height: 2px;
+  background-color: #e5e7eb;
+}
+
+.tree-line.last-child::before {
+  height: 24px;
+}
+
+/* Hover effects for tree items */
+.tree-line:hover::before,
+.tree-line:hover::after {
+  background-color: #6366f1;
+}
+
+/* Active state for expanded items */
+.tree-line.active::before,
+.tree-line.active::after {
+  background-color: #4f46e5;
+}
