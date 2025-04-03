@@ -326,6 +326,31 @@
       "userStatuses": {
         "9b25825e-0476-44ac-9623-9ee9624751a6": "completed"
       }
+    },
+    "PR.AC-3.1": {
+      "userStatuses": {
+        "9b25825e-0476-44ac-9623-9ee9624751a6": "in-progress"
+      }
+    },
+    "ID.AM-2.1": {
+      "userStatuses": {
+        "9b25825e-0476-44ac-9623-9ee9624751a6": "in-progress"
+      }
+    },
+    "PR.AC-1.1": {
+      "userStatuses": {
+        "9b25825e-0476-44ac-9623-9ee9624751a6": "completed"
+      }
+    },
+    "PR.IP-4.1": {
+      "userStatuses": {
+        "9b25825e-0476-44ac-9623-9ee9624751a6": "in-progress"
+      }
+    },
+    "PR.IP-11.1": {
+      "userStatuses": {
+        "9b25825e-0476-44ac-9623-9ee9624751a6": "completed"
+      }
     }
   }
 }

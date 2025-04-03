@@ -335,6 +335,63 @@ export const functions: Function[] = [
             ]
           }
         ]
+      },
+      {
+        id: "PR.IP",
+        name: "Information Protection Processes and Procedures",
+        description: "Security policies, processes, and procedures are maintained and used to manage protection of information systems and assets",
+        subcategories: [
+          {
+            id: "PR.IP-4",
+            title: "Backups of information are conducted, maintained, and tested",
+            description: "Backups for organization's business-critical data shall be conducted and stored on a system different from the device on which the original data resides (key measure)",
+            requirements: [
+              {
+                id: "PR.IP-4.1",
+                title: "Conduct and store backups off the primary system",
+                description: "Perform regular backups of critical data and store them offline or on separate systems to protect against ransomware or loss.",
+                cyfunLevel: "basic",
+                subcategoryId: "PR.IP-4",
+                guidance: [
+                  "Include software, configurations, documentation, and other critical data in backups",
+                  "Consider offline (disconnected) backups periodically",
+                  "Review recovery time and point objectives",
+                  "Ensure backups are not on the same network as primary data"
+                ],
+                references: [
+                  { name: "CIS Controls V8 (ETSI TR 103 305 1 V4.1.1)", clause: "Critical Security Control 11" },
+                  { name: "IEC 62443-2-1:2010", clause: "Clause 4.3.4.3.9" },
+                  { name: "IEC 62443-3-3:2013", clause: "SR 7.3, SR 7.4" },
+                  { name: "ISO/IEC 27001:2022 (NBN ISO/IEC 27001:2023)", clause: "Clause 7.5, 8.1, Annex A (see ISO 27002)" },
+                  { name: "ISO/IEC 27002:2022 (NBN EN ISO/IEC 27002:2022)", clause: "Control 5.29, 5.33, 8.13" }
+                ]
+              }
+            ]
+          },
+          {
+            id: "PR.IP-11",
+            title: "Cybersecurity is included in human resources practices (deprovisioning, personnel screening…)",
+            description: "Personnel having access to the organization's most critical information or technology shall be verified",
+            requirements: [
+              {
+                id: "PR.IP-11.1",
+                title: "Verify personnel for critical access",
+                description: "Perform screening and define processes to ensure trustworthiness of personnel who have access to sensitive information or technology.",
+                cyfunLevel: "basic",
+                subcategoryId: "PR.IP-11",
+                guidance: [
+                  "Apply background checks for staff with privileged or critical access",
+                  "Review access rights at hiring, during employment, and upon termination",
+                  "Ensure compliance with local legal and privacy requirements"
+                ],
+                references: [
+                  { name: "CIS Controls V8 (ETSI TR 103 305 1 V4.1.1)", clause: "Critical Security Control 4, 6" },
+                  { name: "IEC 62443-2-1:2010", clause: "Clause 4.3.3.2.1, 4.3.3.2.2, 4.3.3.2.3" }
+                ]
+              }
+            ]
+          }
+        ]
       }
     ]
   },

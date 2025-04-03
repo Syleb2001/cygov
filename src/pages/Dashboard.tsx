@@ -12,13 +12,57 @@ import { useNotifications } from '../context/NotificationsContext';
 import NotificationsDropdown from '../components/NotificationsDropdown';
 import { format, addDays } from 'date-fns';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
+import { Pie } from 'react-chartjs-2';
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
 type StatusFilter = 'all' | 'pending' | 'in-progress' | 'completed';
 
+const getRequirementsForLevel = (requirements: Requirement[], cyfunLevel?: string): Requirement[] => {
+  if (!cyfunLevel) return [];
+  
+  switch (cyfunLevel) {
+    case 'essential':
+      return requirements.filter(req => 
+        ['basic', 'important', 'essential'].includes(req.cyfunLevel)
+      );
+    case 'important':
+      return requirements.filter(req => 
+        ['basic', 'important'].includes(req.cyfunLevel)
+      );
+    case 'basic':
+    default:
+      return requirements.filter(req => 
+        req.cyfunLevel === 'basic'
+      );
+  }
+};
+
+const getStatusColor = (status: string) => {
+  switch (status) {
+    case 'completed':
+      return 'bg-green-50 border-green-200 text-green-700';
+    case 'in-progress':
+      return 'bg-yellow-50 border-yellow-200 text-yellow-700';
+    default:
+      return 'bg-red-50 border-red-200 text-red-700';
+  }
+};
+
+const getStatusText = (status: string) => {
+  switch (status) {
+    case 'completed':
+      return 'Completed';
+    case 'in-progress':
+      return 'In Progress';
+    default:
+      return 'Pending';
+  }
+};
+
 export default function Dashboard() {
   const { user } = useAuth();
+  const { addNotification } = useNotifications();
   const [expandedFunction, setExpandedFunction] = useState<string | null>(null);
   const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
   const [expandedSubcategory, setExpandedSubcategory] = useState<string | null>(null);
@@ -99,56 +143,6 @@ export default function Dashboard() {
     }
   }, [user]);
 
-  const getRequirementsForLevel = (requirements: Requirement[]): Requirement[] => {
-    if (!user?.cyfunLevel) return [];
-    
-    switch (user.cyfunLevel) {
-      case 'essential':
-        return requirements.filter(req => 
-          ['basic', 'important', 'essential'].includes(req.cyfunLevel)
-        );
-      case 'important':
-        return requirements.filter(req => 
-          ['basic', 'important'].includes(req.cyfunLevel)
-        );
-      case 'basic':
-      default:
-        return requirements.filter(req => 
-          req.cyfunLevel === 'basic'
-        );
-    }
-  };
-
-  const filterRequirements = (requirements: Requirement[]): Requirement[] => {
-    if (statusFilter === 'all') return requirements;
-    return requirements.filter(req => {
-      const status = controlStatuses[req.id] || 'pending';
-      return status === statusFilter;
-    });
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'completed':
-        return 'bg-green-50 border-green-200 text-green-700';
-      case 'in-progress':
-        return 'bg-yellow-50 border-yellow-200 text-yellow-700';
-      default:
-        return 'bg-red-50 border-red-200 text-red-700';
-    }
-  };
-
-  const getStatusText = (status: string) => {
-    switch (status) {
-      case 'completed':
-        return 'Completed';
-      case 'in-progress':
-        return 'In Progress';
-      default:
-        return 'Pending';
-    }
-  };
-
   const handleStatusChange = async (requirementId: string, newStatus: string) => {
     if (!user) return;
 
@@ -172,6 +166,35 @@ export default function Dashboard() {
         ...prev,
         [requirementId]: newStatus
       }));
+
+      const requirement = functions
+        .flatMap(f => f.categories)
+        .flatMap(c => c.subcategories)
+        .flatMap(s => s.requirements)
+        .find(r => r.id === requirementId);
+
+      if (requirement) {
+        let message = '';
+        switch (newStatus) {
+          case 'in-progress':
+            message = `${requirementId} has been marked as In Progress. Don't forget to set a deadline!`;
+            break;
+          case 'completed':
+            message = `${requirementId} has been marked as Completed. Don't forget to add proof of implementation!`;
+            break;
+          case 'pending':
+            message = `${requirementId} has been marked as Pending`;
+            break;
+        }
+
+        addNotification({
+          type: 'status',
+          title: 'Requirement Status Updated',
+          message,
+          controlId: requirementId
+        });
+      }
+
       setError(null);
     } catch (error) {
       console.error('Error updating control status:', error);
@@ -179,7 +202,100 @@ export default function Dashboard() {
     }
   };
 
-  // Calculate statistics
+  const handleAddDeadline = async () => {
+    if (!selectedRequirementForDeadline || !user) return;
+
+    try {
+      const response = await fetch('/api/deadlines', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          controlId: selectedRequirementForDeadline,
+          userId: user.id,
+          ...newDeadline
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to add deadline');
+      }
+
+      const data = await response.json();
+      
+      addNotification({
+        type: 'deadline',
+        title: 'New Deadline Added',
+        message: `Deadline set for ${selectedRequirementForDeadline} on ${format(new Date(newDeadline.dueDate), 'MMM d, yyyy')}`,
+        controlId: selectedRequirementForDeadline
+      });
+
+      setShowDeadlineModal(false);
+      setSelectedRequirementForDeadline(null);
+      setNewDeadline({
+        dueDate: format(addDays(new Date(), 7), 'yyyy-MM-dd'),
+        priority: 'medium',
+        description: ''
+      });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to add deadline');
+    }
+  };
+
+  const handleAddPoi = async () => {
+    if (!selectedRequirementForPoi || !user) return;
+
+    try {
+      const response = await fetch('/api/pois', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          controlId: selectedRequirementForPoi,
+          userId: user.id,
+          ...newPoi
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to add POI');
+      }
+
+      const data = await response.json();
+      setPois(prev => ({
+        ...prev,
+        [selectedRequirementForPoi]: data.poi
+      }));
+
+      addNotification({
+        type: 'poi',
+        title: 'Proof of Implementation Added',
+        message: `POI added for ${selectedRequirementForPoi}`,
+        controlId: selectedRequirementForPoi
+      });
+
+      setShowPoiModal(false);
+      setSelectedRequirementForPoi(null);
+      setNewPoi({
+        type: 'text',
+        content: ''
+      });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to add POI');
+    }
+  };
+
+  const handlePoiClick = (requirementId: string) => {
+    const poi = pois[requirementId];
+    if (poi) {
+      setSelectedPoiForView(poi);
+      setShowPoiViewModal(true);
+    } else {
+      setSelectedRequirementForPoi(requirementId);
+      setShowPoiModal(true);
+    }
+  };
+
   const calculateStats = () => {
     let total = 0;
     let completed = 0;
@@ -188,7 +304,7 @@ export default function Dashboard() {
     functions.forEach(func => {
       func.categories.forEach(cat => {
         cat.subcategories.forEach(subcat => {
-          const requirements = getRequirementsForLevel(subcat.requirements);
+          const requirements = getRequirementsForLevel(subcat.requirements, user?.cyfunLevel);
           requirements.forEach(req => {
             total++;
             const status = controlStatuses[req.id] || 'pending';
@@ -221,9 +337,16 @@ export default function Dashboard() {
     ],
   };
 
+  const filterRequirements = (requirements: Requirement[]): Requirement[] => {
+    if (statusFilter === 'all') return requirements;
+    return requirements.filter(req => {
+      const status = controlStatuses[req.id] || 'pending';
+      return status === statusFilter;
+    });
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
       <header className="bg-white shadow-sm">
         <div className="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8 flex justify-between items-center">
           <div className="flex items-center space-x-3">
@@ -443,7 +566,7 @@ export default function Dashboard() {
               let hasFilteredRequirements = false;
               func.categories.forEach(cat => {
                 cat.subcategories.forEach(subcat => {
-                  const requirements = getRequirementsForLevel(subcat.requirements);
+                  const requirements = getRequirementsForLevel(subcat.requirements, user?.cyfunLevel);
                   if (filterRequirements(requirements).length > 0) {
                     hasFilteredRequirements = true;
                   }
@@ -475,7 +598,7 @@ export default function Dashboard() {
                       {func.categories.map((cat, catIndex) => {
                         let categoryHasFilteredRequirements = false;
                         cat.subcategories.forEach(subcat => {
-                          const requirements = getRequirementsForLevel(subcat.requirements);
+                          const requirements = getRequirementsForLevel(subcat.requirements, user?.cyfunLevel);
                           if (filterRequirements(requirements).length > 0) {
                             categoryHasFilteredRequirements = true;
                           }
@@ -504,7 +627,7 @@ export default function Dashboard() {
                             {expandedCategory === cat.id && (
                               <div className="mt-2 space-y-2 pl-8">
                                 {cat.subcategories.map((subcat, subcatIndex) => {
-                                  const requirements = getRequirementsForLevel(subcat.requirements);
+                                  const requirements = getRequirementsForLevel(subcat.requirements, user?.cyfunLevel);
                                   const filteredRequirements = filterRequirements(requirements);
 
                                   if (filteredRequirements.length === 0 && statusFilter !== 'all') return null;
@@ -593,6 +716,7 @@ export default function Dashboard() {
                                                         {pois[req.id] ? (
                                                           <div className="relative">
                                                             <FileText className="h-5 w-5 text-green-600" />
+                                                            
                                                             <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full" />
                                                           </div>
                                                         ) : (
@@ -645,8 +769,221 @@ export default function Dashboard() {
         </div>
       </main>
 
-      {/* Modals */}
-      {/* ... (rest of the modals remain unchanged) ... */}
+      {/* Deadline Modal */}
+      {showDeadlineModal && (
+        <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg max-w-md w-full p-6">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-medium text-gray-900">Set Deadline</h3>
+              <button
+                onClick={() => setShowDeadlineModal(false)}
+                className="text-gray-400 hover:text-gray-500"
+              >
+                <X className="h-6 w-6" />
+              </button>
+            </div>
+            <div className="space-y-4">
+              <div>
+                <label htmlFor="due-date" className="block text-sm font-medium text-gray-700">
+                  Due Date
+                </label>
+                <input
+                  type="date"
+                  id="due-date"
+                  value={newDeadline.dueDate}
+                  onChange={(e) => setNewDeadline(prev => ({ ...prev, dueDate: e.target.value }))}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                />
+              </div>
+              <div>
+                <label htmlFor="priority" className="block text-sm font-medium text-gray-700">
+                  Priority
+                </label>
+                <select
+                  id="priority"
+                  value={newDeadline.priority}
+                  onChange={(e) => setNewDeadline(prev => ({ ...prev, priority: e.target.value as 'low' | 'medium' | 'high' }))}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                >
+                  <option value="low">Low</option>
+                  <option value="medium">Medium</option>
+                  <option value="high">High</option>
+                </select>
+              </div>
+              <div>
+                <label htmlFor="description" className="block text-sm font-medium text-gray-700">
+                  Description
+                </label>
+                <textarea
+                  id="description"
+                  value={newDeadline.description}
+                  onChange={(e) => setNewDeadline(prev => ({ ...prev, description: e.target.value }))}
+                  rows={3}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                />
+              </div>
+              <div className="flex justify-end space-x-3">
+                <button
+                  onClick={() => setShowDeadlineModal(false)}
+                  className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleAddDeadline}
+                  className="px-4 py-2 bg-indigo-600 border border-transparent rounded-md text-sm font-medium text-white hover:bg-indigo-700"
+                >
+                  Set Deadline
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* POI Modal */}
+      {showPoiModal && (
+        <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg max-w-md w-full p-6">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-medium text-gray-900">Add Proof of Implementation</h3>
+              <button
+                onClick={() => setShowPoiModal(false)}
+                className="text-gray-400 hover:text-gray-500"
+              >
+                <X className="h-6 w-6" />
+              </button>
+            </div>
+            <div className="space-y-4">
+              <div>
+                <label htmlFor="poi-type" className="block text-sm font-medium text-gray-700">
+                  Type
+                </label>
+                <select
+                  id="poi-type"
+                  value={newPoi.type}
+                  onChange={(e) => setNewPoi(prev => ({ ...prev, type: e.target.value as 'text' | 'image' | 'link' }))}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                >
+                  <option value="text">Text</option>
+                  <option value="link">Link</option>
+                </select>
+              </div>
+              <div>
+                <label htmlFor="poi-content" className="block text-sm font-medium text-gray-700">
+                  {newPoi.type === 'text' ? 'Description' : 'URL'}
+                </label>
+                {newPoi.type === 'text' ? (
+                  <textarea
+                    id="poi-content"
+                    value={newPoi.content}
+                    onChange={(e) => setNewPoi(prev => ({ ...prev, content: e.target.value }))}
+                    rows={3}
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                  />
+                ) : (
+                  <input
+                    type="url"
+                    id="poi-content"
+                    value={newPoi.content}
+                    onChange={(e) => setNewPoi(prev => ({ ...prev, content: e.target.value }))}
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                  />
+                )}
+              </div>
+              <div className="flex justify-end space-x-3">
+                <button
+                  onClick={() => setShowPoiModal(false)}
+                  className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleAddPoi}
+                  className="px-4 py-2 bg-indigo-600 border border-transparent rounded-md text-sm font-medium text-white hover:bg-indigo-700"
+                >
+                  Add POI
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* POI View Modal */}
+      {showPoiViewModal && selectedPoiForView && (
+        <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg max-w-md w-full p-6">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-medium text-gray-900">Proof of Implementation</h3>
+              <button
+                onClick={() => {
+                  setShowPoiViewModal(false);
+                  setSelectedPoiForView(null);
+                }}
+                className="text-gray-400 hover:text-gray-500"
+              >
+                <X className="h-6 w-6" />
+              </button>
+            </div>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700">
+                  Type
+                </label>
+                <p className="mt-1 text-sm text-gray-900 capitalize">{selectedPoiForView.type}</p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">
+                  Content
+                </label>
+                {selectedPoiForView.type === 'link' ? (
+                  <a
+                    href={selectedPoiForView.content}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-1 inline-flex items-center text-sm text-indigo-600 hover:text-indigo-500"
+                  >
+                    <LinkIcon className="h-4 w-4 mr-1" />
+                    Open Link
+                  </a>
+                ) : selectedPoiForView.type === 'image' ? (
+                  <div className="mt-1">
+                    <img
+                      src={selectedPoiForView.content}
+                      alt="Proof of Implementation"
+                      className="max-w-full h-auto rounded-lg"
+                    />
+                  </div>
+                ) : (
+                  <p className="mt-1 text-sm text-gray-900 whitespace-pre-wrap">
+                    {selectedPoiForView.content}
+                  </p>
+                )}
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">
+                  Added
+                </label>
+                <p className="mt-1 text-sm text-gray-900">
+                  {format(new Date(selectedPoiForView.createdAt), 'PPpp')}
+                </p>
+              </div>
+              <div className="flex justify-end">
+                <button
+                  onClick={() => {
+                    setShowPoiViewModal(false);
+                    setSelectedPoiForView(null);
+                  }}
+                  className="px-4 py-2 bg-gray-100 border border-transparent rounded-md text-sm font-medium text-gray-900 hover:bg-gray-200"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
