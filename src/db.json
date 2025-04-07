@@ -5,7 +5,7 @@
       "firstName": "Sylvain",
       "lastName": "Lebailly",
       "email": "sylvain.lebailly@anderson.be",
-      "password": "$2a$10$g3DIxA92nLTgodTj4II/e.SeklW94mnUqrzkDPzaqbTSuVvuG.BQi",
+      "password": "$2a$10$IeWnSZUyRpqKPeDvwoFSV.XhVW/HORT.YHsSheneEmoZ3EVDEmHYm",
       "cyfunLevel": "basic",
       "id": "ed07ad25-690b-492f-b63f-e9a905217ec3",
       "twoFactorSecret": "PJHHGY3YNUXDKQZIKB3UQ4TXEZRFMQB2LBYFE3JDIVVVEQCVGBSQ",
@@ -45,11 +45,10 @@
       "firstName": "Sylvain",
       "lastName": "Lebailly",
       "email": "sylvain@bitopia.ae",
-      "password": "$2a$10$n5IJ6OewtufDPGV8o3IQsOLaWiIDWqsVrGIgEPprel8QawqIrbjbW",
-      "cyfunLevel": "basic",
+      "password": "$2a$10$5IybAOw0rRn2tYMABIebaOyujj07nv9ULit6pJYCTKIXuj62/Cn.2",
+      "cyfunLevel": "important",
       "id": "9b25825e-0476-44ac-9623-9ee9624751a6",
-      "twoFactorSecret": "HN4DUSDEGAVDK2KQIM3XUZCAOZCDEQ2HFR2EMNDYMEYGI43MKE5Q",
-      "twoFactorEnabled": false
+      "isAdmin": true
     }
   ],
   "controls": {
@@ -329,12 +328,12 @@
     },
     "PR.AC-3.1": {
       "userStatuses": {
-        "9b25825e-0476-44ac-9623-9ee9624751a6": "in-progress"
+        "9b25825e-0476-44ac-9623-9ee9624751a6": "pending"
       }
     },
     "ID.AM-2.1": {
       "userStatuses": {
-        "9b25825e-0476-44ac-9623-9ee9624751a6": "in-progress"
+        "9b25825e-0476-44ac-9623-9ee9624751a6": "completed"
       }
     },
     "PR.AC-1.1": {
@@ -344,12 +343,132 @@
     },
     "PR.IP-4.1": {
       "userStatuses": {
-        "9b25825e-0476-44ac-9623-9ee9624751a6": "in-progress"
+        "9b25825e-0476-44ac-9623-9ee9624751a6": "completed"
       }
     },
     "PR.IP-11.1": {
       "userStatuses": {
         "9b25825e-0476-44ac-9623-9ee9624751a6": "completed"
+      }
+    },
+    "RS.RP-1.1": {
+      "userStatuses": {
+        "9b25825e-0476-44ac-9623-9ee9624751a6": "completed"
+      }
+    },
+    "DE.AE-3.1": {
+      "userStatuses": {
+        "9b25825e-0476-44ac-9623-9ee9624751a6": "completed"
+      }
+    },
+    "PR.AC-3.2": {
+      "userStatuses": {
+        "9b25825e-0476-44ac-9623-9ee9624751a6": "completed"
+      }
+    },
+    "PR.AC-4.4": {
+      "userStatuses": {
+        "9b25825e-0476-44ac-9623-9ee9624751a6": "completed"
+      }
+    },
+    "PR.AC-5.1": {
+      "userStatuses": {
+        "9b25825e-0476-44ac-9623-9ee9624751a6": "pending"
+      }
+    },
+    "PR.AT-1.1": {
+      "userStatuses": {
+        "9b25825e-0476-44ac-9623-9ee9624751a6": "completed"
+      }
+    },
+    "PR.DS-3.1": {
+      "userStatuses": {
+        "9b25825e-0476-44ac-9623-9ee9624751a6": "pending"
+      }
+    },
+    "ID.GV-1.1": {
+      "userStatuses": {
+        "9b25825e-0476-44ac-9623-9ee9624751a6": "completed"
+      }
+    },
+    "RC.RP-1.1": {
+      "userStatuses": {
+        "9b25825e-0476-44ac-9623-9ee9624751a6": "completed"
+      }
+    },
+    "ID.AM-3.1": {
+      "userStatuses": {
+        "9b25825e-0476-44ac-9623-9ee9624751a6": "pending"
+      }
+    },
+    "ID.AM-5.1": {
+      "userStatuses": {
+        "9b25825e-0476-44ac-9623-9ee9624751a6": "in-progress"
+      }
+    },
+    "PR.AC-2.1": {
+      "userStatuses": {
+        "9b25825e-0476-44ac-9623-9ee9624751a6": "completed"
+      }
+    },
+    "PR.AC-4.3": {
+      "userStatuses": {
+        "9b25825e-0476-44ac-9623-9ee9624751a6": "completed"
+      }
+    },
+    "PR.AC-4.2": {
+      "userStatuses": {
+        "9b25825e-0476-44ac-9623-9ee9624751a6": "completed"
+      }
+    },
+    "PR.AC-4.1": {
+      "userStatuses": {
+        "9b25825e-0476-44ac-9623-9ee9624751a6": "completed"
+      }
+    },
+    "PR.AC-5.2": {
+      "userStatuses": {
+        "9b25825e-0476-44ac-9623-9ee9624751a6": "completed"
+      }
+    },
+    "PR.MA-1.1": {
+      "userStatuses": {
+        "9b25825e-0476-44ac-9623-9ee9624751a6": "completed"
+      }
+    },
+    "PR.PT-1.1": {
+      "userStatuses": {
+        "9b25825e-0476-44ac-9623-9ee9624751a6": "in-progress"
+      }
+    },
+    "PR.PT-4.1": {
+      "userStatuses": {
+        "9b25825e-0476-44ac-9623-9ee9624751a6": "completed"
+      }
+    },
+    "ID.GV-3.1": {
+      "userStatuses": {
+        "9b25825e-0476-44ac-9623-9ee9624751a6": "pending"
+      }
+    },
+    "RS.CO-3.1": {
+      "userStatuses": {
+        "9b25825e-0476-44ac-9623-9ee9624751a6": "completed"
+      }
+    },
+    "RS.IM-1.1": {
+      "userStatuses": {
+        "9b25825e-0476-44ac-9623-9ee9624751a6": "in-progress"
+      }
+    },
+    "ID.GV-4.1": {
+      "userStatuses": {
+        "9b25825e-0476-44ac-9623-9ee9624751a6": "pending"
+      }
+    },
+    "DE.CM-3.1": {
+      "userStatuses": {
+        "9b25825e-0476-44ac-9623-9ee9624751a6": "in-progress"
       }
     }
   }

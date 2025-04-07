@@ -22,9 +22,9 @@ export default function Calendar() {
       if (!response.ok) throw new Error('Failed to fetch deadlines');
       
       const data = await response.json();
-      // Filter deadlines for the current user's company
+      // Filter deadlines for the current user only
       const filteredDeadlines = data.deadlines.filter((deadline: Deadline) => 
-        deadline.companyId === user?.companyName
+        deadline.userId === user?.id
       );
       setDeadlines(filteredDeadlines);
     } catch (err) {

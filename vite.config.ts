@@ -169,6 +169,85 @@ export default defineConfig({
           res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
           res.setHeader('Content-Type', 'application/json');
 
+          if (req.url?.startsWith('/api/admin/')) {
+            const db = readDb();
+            const chat = readChat();
+            const calendar = readCalendar();
+            const poi = readPoi();
+
+            const authHeader = req.headers.authorization;
+            if (!authHeader) {
+              res.statusCode = 401;
+              res.end(JSON.stringify({ error: 'Unauthorized' }));
+              return;
+            }
+
+            const token = authHeader.split(' ')[1];
+            const user = db.users.find(u => u.id === token);
+            if (!user?.isAdmin) {
+              res.statusCode = 403;
+              res.end(JSON.stringify({ error: 'Forbidden' }));
+              return;
+            }
+
+            if (req.url === '/api/admin/users') {
+              const safeUsers = db.users.map(({ password, twoFactorSecret, ...user }) => user);
+              res.end(JSON.stringify({ 
+                users: safeUsers,
+                controls: db.controls
+              }));
+              return;
+            }
+
+            if (req.url === '/api/admin/notes') {
+              res.end(JSON.stringify({ notes: chat.notes }));
+              return;
+            }
+
+            if (req.url === '/api/admin/deadlines') {
+              res.end(JSON.stringify({ deadlines: calendar.deadlines }));
+              return;
+            }
+
+            if (req.url === '/api/admin/pois') {
+              res.end(JSON.stringify({ pois: poi.pois }));
+              return;
+            }
+
+            if (req.url === '/api/admin/password') {
+              let body = '';
+              req.on('data', chunk => {
+                body += chunk.toString();
+              });
+
+              req.on('end', async () => {
+                try {
+                  const { email, newPassword } = JSON.parse(body);
+                  
+                  const userIndex = db.users.findIndex(u => u.email === email);
+                  if (userIndex === -1) {
+                    res.statusCode = 404;
+                    res.end(JSON.stringify({ error: 'User not found' }));
+                    return;
+                  }
+
+                  const salt = await bcrypt.genSalt(10);
+                  const hashedPassword = await bcrypt.hash(newPassword, salt);
+
+                  db.users[userIndex].password = hashedPassword;
+                  writeDb(db);
+
+                  res.end(JSON.stringify({ success: true }));
+                } catch (error) {
+                  console.error('Error updating password:', error);
+                  res.statusCode = 500;
+                  res.end(JSON.stringify({ error: 'Failed to update password' }));
+                }
+              });
+              return;
+            }
+          }
+
           if (req.url?.startsWith('/api/pois')) {
             const poi = readPoi();
             const db = readDb();

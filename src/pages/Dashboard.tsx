@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { 
   BarChart3, FileCheck, AlertCircle, ChevronDown, ChevronUp, 
   Info, UserCircle, Filter, Calendar, Clock, PieChart, Shield, 
-  FileText, Link as LinkIcon, Image as ImageIcon, X, Bell 
+  FileText, Link as LinkIcon, Image as ImageIcon, X, Bell, Star 
 } from 'lucide-react';
 import { functions } from '../data/functions';
 import type { Function, Category, Subcategory, Requirement, POI } from '../types';
@@ -18,7 +18,30 @@ ChartJS.register(ArcElement, Tooltip, Legend);
 
 type StatusFilter = 'all' | 'pending' | 'in-progress' | 'completed';
 
-const getRequirementsForLevel = (requirements: Requirement[], cyfunLevel?: string): Requirement[] => {
+// Helper functions
+function getStatusColor(status: string) {
+  switch (status) {
+    case 'completed':
+      return 'bg-green-50 border-green-200 text-green-700';
+    case 'in-progress':
+      return 'bg-yellow-50 border-yellow-200 text-yellow-700';
+    default:
+      return 'bg-red-50 border-red-200 text-red-700';
+  }
+}
+
+function getStatusText(status: string) {
+  switch (status) {
+    case 'completed':
+      return 'Completed';
+    case 'in-progress':
+      return 'In Progress';
+    default:
+      return 'Pending';
+  }
+}
+
+function getRequirementsForLevel(requirements: Requirement[], cyfunLevel?: string): Requirement[] {
   if (!cyfunLevel) return [];
   
   switch (cyfunLevel) {
@@ -36,38 +59,121 @@ const getRequirementsForLevel = (requirements: Requirement[], cyfunLevel?: strin
         req.cyfunLevel === 'basic'
       );
   }
-};
+}
 
-const getStatusColor = (status: string) => {
-  switch (status) {
-    case 'completed':
-      return 'bg-green-50 border-green-200 text-green-700';
-    case 'in-progress':
-      return 'bg-yellow-50 border-yellow-200 text-yellow-700';
-    default:
-      return 'bg-red-50 border-red-200 text-red-700';
-  }
-};
+// Utility functions to count items
+function countCategories(func: Function): number {
+  return func.categories.length;
+}
 
-const getStatusText = (status: string) => {
-  switch (status) {
-    case 'completed':
-      return 'Completed';
-    case 'in-progress':
-      return 'In Progress';
-    default:
-      return 'Pending';
-  }
-};
+function countSubcategories(cat: Category): number {
+  return cat.subcategories.length;
+}
+
+function countRequirements(subcat: Subcategory, cyfunLevel?: string): number {
+  return getRequirementsForLevel(subcat.requirements, cyfunLevel).length;
+}
+
+// Completion calculation functions
+function calculateSubcategoryCompletion(subcat: Subcategory, controlStatuses: Record<string, { userStatuses: Record<string, string> }>, userId?: string, cyfunLevel?: string): number {
+  const requirements = getRequirementsForLevel(subcat.requirements, cyfunLevel);
+  if (requirements.length === 0) return 0;
+  
+  const completedCount = requirements.filter(req => {
+    const status = getStatusForRequirement(req.id, controlStatuses, userId);
+    return status === 'completed';
+  }).length;
+  return (completedCount / requirements.length) * 100;
+}
+
+function calculateCategoryCompletion(cat: Category, controlStatuses: Record<string, { userStatuses: Record<string, string> }>, userId?: string, cyfunLevel?: string): number {
+  if (cat.subcategories.length === 0) return 0;
+  
+  const subcategoryCompletions = cat.subcategories.map(subcat => 
+    calculateSubcategoryCompletion(subcat, controlStatuses, userId, cyfunLevel)
+  );
+  
+  const totalCompletion = subcategoryCompletions.reduce((acc, curr) => acc + curr, 0);
+  return totalCompletion / cat.subcategories.length;
+}
+
+function calculateFunctionCompletion(func: Function, controlStatuses: Record<string, { userStatuses: Record<string, string> }>, userId?: string, cyfunLevel?: string): number {
+  if (func.categories.length === 0) return 0;
+  
+  const categoryCompletions = func.categories.map(cat => 
+    calculateCategoryCompletion(cat, controlStatuses, userId, cyfunLevel)
+  );
+  
+  const totalCompletion = categoryCompletions.reduce((acc, curr) => acc + curr, 0);
+  return totalCompletion / func.categories.length;
+}
+
+function getStatusForRequirement(reqId: string, controlStatuses: Record<string, { userStatuses: Record<string, string> }>, userId?: string): string {
+  if (!userId) return 'pending';
+  
+  // Check specific requirement status first
+  const reqStatus = controlStatuses[reqId]?.userStatuses[userId];
+  if (reqStatus) return reqStatus;
+  
+  // If no specific status, check parent control status
+  const parentControlId = reqId.split('.').slice(0, -1).join('.');
+  return controlStatuses[parentControlId]?.userStatuses[userId] || 'pending';
+}
+
+// Circular Progress Component
+function CircularProgress({ percentage }: { percentage: number }) {
+  const radius = 14;
+  const circumference = 2 * Math.PI * radius;
+  const offset = circumference - (percentage / 100) * circumference;
+
+  const getColorClass = (percentage: number) => {
+    if (percentage >= 100) return 'text-green-600';
+    if (percentage >= 75) return 'text-green-400';
+    if (percentage >= 50) return 'text-yellow-400';
+    if (percentage >= 25) return 'text-orange-400';
+    return 'text-red-500';
+  };
+  
+  return (
+    <div className="relative inline-flex items-center justify-center w-8 h-8 mr-3">
+      <svg className="transform -rotate-90 w-8 h-8">
+        <circle
+          className="text-gray-200"
+          strokeWidth="2"
+          stroke="currentColor"
+          fill="transparent"
+          r="14"
+          cx="16"
+          cy="16"
+        />
+        <circle
+          className={getColorClass(percentage)}
+          strokeWidth="2"
+          strokeDasharray={circumference}
+          strokeDashoffset={offset}
+          strokeLinecap="round"
+          stroke="currentColor"
+          fill="transparent"
+          r="14"
+          cx="16"
+          cy="16"
+        />
+      </svg>
+      <span className={`absolute text-xs font-medium ${getColorClass(percentage)}`}>
+        {Math.round(percentage)}
+      </span>
+    </div>
+  );
+}
 
 export default function Dashboard() {
-  const { user } = useAuth();
+  const { user, isReadOnly } = useAuth();
   const { addNotification } = useNotifications();
   const [expandedFunction, setExpandedFunction] = useState<string | null>(null);
   const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
   const [expandedSubcategory, setExpandedSubcategory] = useState<string | null>(null);
   const [selectedRequirement, setSelectedRequirement] = useState<Requirement | null>(null);
-  const [controlStatuses, setControlStatuses] = useState<Record<string, string>>({});
+  const [controlStatuses, setControlStatuses] = useState<Record<string, { userStatuses: Record<string, string> }>>({});
   const [error, setError] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [showDeadlineModal, setShowDeadlineModal] = useState(false);
@@ -97,17 +203,7 @@ export default function Dashboard() {
         }
         
         const data = await response.json();
-        const statuses: Record<string, string> = {};
-        
-        if (data.controls && typeof data.controls === 'object') {
-          Object.entries(data.controls).forEach(([controlId, control]: [string, any]) => {
-            if (control.userStatuses && user?.id && control.userStatuses[user.id]) {
-              statuses[controlId] = control.userStatuses[user.id];
-            }
-          });
-        }
-        
-        setControlStatuses(statuses);
+        setControlStatuses(data.controls || {});
       } catch (error) {
         console.error('Error fetching control statuses:', error);
         setError(error instanceof Error ? error.message : 'Failed to fetch controls');
@@ -144,6 +240,11 @@ export default function Dashboard() {
   }, [user]);
 
   const handleStatusChange = async (requirementId: string, newStatus: string) => {
+    if (isReadOnly) {
+      setError('Cannot change status in read-only mode');
+      return;
+    }
+
     if (!user) return;
 
     try {
@@ -164,7 +265,12 @@ export default function Dashboard() {
 
       setControlStatuses(prev => ({
         ...prev,
-        [requirementId]: newStatus
+        [requirementId]: {
+          userStatuses: {
+            ...(prev[requirementId]?.userStatuses || {}),
+            [user.id]: newStatus
+          }
+        }
       }));
 
       const requirement = functions
@@ -307,7 +413,7 @@ export default function Dashboard() {
           const requirements = getRequirementsForLevel(subcat.requirements, user?.cyfunLevel);
           requirements.forEach(req => {
             total++;
-            const status = controlStatuses[req.id] || 'pending';
+            const status = getStatusForRequirement(req.id, controlStatuses, user?.id);
             if (status === 'completed') completed++;
             else if (status === 'in-progress') inProgress++;
           });
@@ -340,7 +446,7 @@ export default function Dashboard() {
   const filterRequirements = (requirements: Requirement[]): Requirement[] => {
     if (statusFilter === 'all') return requirements;
     return requirements.filter(req => {
-      const status = controlStatuses[req.id] || 'pending';
+      const status = getStatusForRequirement(req.id, controlStatuses, user?.id);
       return status === statusFilter;
     });
   };
@@ -582,8 +688,9 @@ export default function Dashboard() {
                     className="w-full bg-white p-4 rounded-lg shadow flex items-center justify-between hover:bg-gray-50"
                   >
                     <div className="flex items-center">
+                      <CircularProgress percentage={calculateFunctionCompletion(func, controlStatuses, user?.id, user?.cyfunLevel)} />
                       <h3 className="text-lg font-medium text-gray-900">
-                        {func.name} ({func.id})
+                        {func.name} ({func.id}) <span className="text-sm text-gray-500">({countCategories(func)} categories)</span>
                       </h3>
                     </div>
                     {expandedFunction === func.id ? (
@@ -613,8 +720,9 @@ export default function Dashboard() {
                               className="w-full bg-white p-3 rounded-lg shadow-sm flex items-center justify-between hover:bg-gray-50 border border-gray-200"
                             >
                               <div className="flex items-center">
+                                <CircularProgress percentage={calculateCategoryCompletion(cat, controlStatuses, user?.id, user?.cyfunLevel)} />
                                 <h4 className="text-md font-medium text-gray-800">
-                                  {cat.name} ({cat.id})
+                                  {cat.name} ({cat.id}) <span className="text-sm text-gray-500">({countSubcategories(cat)} subcategories)</span>
                                 </h4>
                               </div>
                               {expandedCategory === cat.id ? (
@@ -639,8 +747,9 @@ export default function Dashboard() {
                                         className="w-full bg-white p-3 rounded-lg shadow-sm flex items-center justify-between hover:bg-gray-50 border border-gray-200"
                                       >
                                         <div className="flex items-center">
+                                          <CircularProgress percentage={calculateSubcategoryCompletion(subcat, controlStatuses, user?.id, user?.cyfunLevel)} />
                                           <h5 className="text-sm font-medium text-gray-800">
-                                            {subcat.id}: {subcat.title}
+                                            {subcat.id}: {subcat.title} <span className="text-sm text-gray-500">({countRequirements(subcat, user?.cyfunLevel)} requirements)</span>
                                           </h5>
                                         </div>
                                         {expandedSubcategory === subcat.id ? (
@@ -658,88 +767,63 @@ export default function Dashboard() {
                                               className={`tree-line ${reqIndex === filteredRequirements.length - 1 ? 'last-child' : ''}`}
                                             >
                                               <div
-                                                className={`p-4 rounded-lg shadow-sm border ${
-                                                  getStatusColor(controlStatuses[req.id] || 'pending')
+                                                className={`p-2 rounded-lg shadow-sm border ${
+                                                  getStatusColor(getStatusForRequirement(req.id, controlStatuses, user?.id))
                                                 }`}
                                               >
                                                 <div className="flex items-center justify-between">
                                                   <div className="flex-1">
-                                                    <div className="flex items-center gap-2">
-                                                      <h4 className="font-medium">{req.id}</h4>
+                                                    <div className="flex items-center gap-1">
+                                                      <h4 className="text-sm font-medium">{req.id}</h4>
+                                                      {req.isKeyMeasure && (
+                                                        <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
+                                                          <Star className="h-3 w-3 mr-0.5" />
+                                                          Key Measure
+                                                        </span>
+                                                      )}
                                                       <button
                                                         onClick={() => setSelectedRequirement(selectedRequirement?.id === req.id ? null : req)}
-                                                        className="p-1 hover:bg-gray-100 rounded-full transition-colors"
+                                                        className="p-0.5 hover:bg-gray-100 rounded-full transition-colors"
                                                       >
-                                                        <Info className="h-4 w-4" />
+                                                        <Info className="h-3.5 w-3.5" />
                                                       </button>
                                                     </div>
-                                                    <p className="text-sm opacity-90">{req.title}</p>
-                                                    
-                                                    {selectedRequirement?.id === req.id && (
-                                                      <div className="mt-4 p-4 bg-white rounded-lg border border-gray-200">
-                                                        <h5 className="font-medium mb-2">Description</h5>
-                                                        <p className="text-sm text-gray-600 mb-4">{req.description}</p>
-                                                        
-                                                        {req.guidance && req.guidance.length > 0 && (
-                                                          <>
-                                                            <h5 className="font-medium mb-2">Guidance</h5>
-                                                            <ul className="list-disc list-inside text-sm text-gray-600 mb-4">
-                                                              {req.guidance.map((item, index) => (
-                                                                <li key={index} className="mb-1">{item}</li>
-                                                              ))}
-                                                            </ul>
-                                                          </>
-                                                        )}
-                                                        
-                                                        {req.references && req.references.length > 0 && (
-                                                          <>
-                                                            <h5 className="font-medium mb-2">References</h5>
-                                                            <ul className="text-sm text-gray-600">
-                                                              {req.references.map((ref, index) => (
-                                                                <li key={index} className="mb-1">
-                                                                  {ref.name}{ref.clause ? `, ${ref.clause}` : ''}
-                                                                </li>
-                                                              ))}
-                                                            </ul>
-                                                          </>
-                                                        )}
-                                                      </div>
-                                                    )}
+                                                    <p className="text-xs opacity-90">{req.title}</p>
                                                   </div>
-                                                  <div className="flex items-center space-x-2">
-                                                    {controlStatuses[req.id] === 'completed' && (
+                                                  <div className="flex items-center gap-1">
+                                                    {getStatusForRequirement(req.id, controlStatuses, user?.id) === 'completed' && (
                                                       <button
                                                         onClick={() => handlePoiClick(req.id)}
-                                                        className="p-2 text-gray-600 hover:text-gray-900 rounded-full hover:bg-gray-100"
+                                                        className="p-1 text-gray-600 hover:text-gray-900 rounded-full hover:bg-gray-100"
                                                         title={pois[req.id] ? "View Proof of Implementation" : "Add Proof of Implementation"}
                                                       >
                                                         {pois[req.id] ? (
                                                           <div className="relative">
-                                                            <FileText className="h-5 w-5 text-green-600" />
-                                                            
-                                                            <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full" />
+                                                            <FileText className="h-4 w-4 text-green-600" />
+                                                            <div className="absolute -top-1 -right-1 w-2 h-2 bg-green-500 rounded-full" />
                                                           </div>
                                                         ) : (
-                                                          <FileText className="h-5 w-5" />
+                                                          <FileText className="h-4 w-4" />
                                                         )}
                                                       </button>
                                                     )}
-                                                    {controlStatuses[req.id] === 'in-progress' && (
+                                                    {getStatusForRequirement(req.id, controlStatuses, user?.id) === 'in-progress' && (
                                                       <button
                                                         onClick={() => {
                                                           setSelectedRequirementForDeadline(req.id);
                                                           setShowDeadlineModal(true);
                                                         }}
-                                                        className="p-2 text-gray-600 hover:text-gray-900 rounded-full hover:bg-gray-100"
+                                                        className="p-1 text-gray-600 hover:text-gray-900 rounded-full hover:bg-gray-100"
                                                         title="Set deadline"
                                                       >
-                                                        <Clock className="h-5 w-5" />
+                                                        <Clock className="h-4 w-4" />
                                                       </button>
                                                     )}
                                                     <select
-                                                      value={controlStatuses[req.id] || 'pending'}
+                                                      value={getStatusForRequirement(req.id, controlStatuses, user?.id)}
                                                       onChange={(e) => handleStatusChange(req.id, e.target.value)}
-                                                      className={`ml-4 rounded-md border py-2 pl-3 pr-10 text-base focus:outline-none focus:ring-2 focus:ring-indigo-500 sm:text-sm ${getStatusColor(controlStatuses[req.id] || 'pending')}`}
+                                                      disabled={isReadOnly}
+                                                      className={`rounded-md border py-1 pl-2 pr-7 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 ${getStatusColor(getStatusForRequirement(req.id, controlStatuses, user?.id))} ${isReadOnly ? 'opacity-50 cursor-not-allowed' : ''}`}
                                                     >
                                                       <option value="pending">{getStatusText('pending')}</option>
                                                       <option value="in-progress">{getStatusText('in-progress')}</option>
@@ -984,6 +1068,61 @@ export default function Dashboard() {
           </div>
         </div>
       )}
+
+      {/* Requirement Details Modal */}
+      {selectedRequirement && (
+        <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg max-w-2xl w-full p-6">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-medium text-gray-900">Requirement Details</h3>
+              <button
+                onClick={() => setSelectedRequirement(null)}
+                className="text-gray-400 hover:text-gray-500"
+              >
+                <X className="h-6 w-6" />
+              </button>
+            </div>
+            <div className="space-y-4">
+              <div>
+                <h4 className="text-sm font-medium text-gray-700">ID</h4>
+                <p className="mt-1">{selectedRequirement.id}</p>
+              </div>
+              <div>
+                <h4 className="text-sm font-medium text-gray-700">Title</h4>
+                <p className="mt-1">{selectedRequirement.title}</p>
+              </div>
+              <div>
+                <h4 className="text-sm font-medium text-gray-700">Description</h4>
+                <p className="mt-1">{selectedRequirement.description}</p>
+              </div>
+              <div>
+                <h4 className="text-sm font-medium text-gray-700">CyFun Level</h4>
+                <p className="mt-1 capitalize">{selectedRequirement.cyfunLevel}</p>
+              </div>
+              <div>
+                <h4 className="text-sm font-medium text-gray-700">Guidance</h4>
+                <ul className="mt-1 list-disc pl-5 space-y-1">
+                  {selectedRequirement.guidance.map((item, index) => (
+                    <li key={index} className="text-sm">{item}</li>
+                  ))}
+                </ul>
+              </div>
+              <div>
+                <h4 className="text-sm font-medium text-gray-700">References</h4>
+                <ul className="mt-1 space-y-1">
+                  {selectedRequirement.references.map((ref, index) => (
+                    <li key={index} className="text-sm">
+                      {ref.name} - {ref.clause}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
+
+export default Dashboard

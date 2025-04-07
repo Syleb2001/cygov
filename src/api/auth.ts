@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import { v4 as uuidv4 } from 'uuid';
+import bcrypt from 'bcryptjs';
 import { User } from '../types';
 
 const DB_PATH = path.join(process.cwd(), 'src/db.json');
@@ -23,7 +24,6 @@ export const readDb = (): { users: User[] } => {
 
 export const writeDb = (data: { users: User[] }) => {
   try {
-    // Ensure the directory exists
     const dir = path.dirname(DB_PATH);
     if (!fs.existsSync(dir)) {
       fs.mkdirSync(dir, { recursive: true });
@@ -84,22 +84,56 @@ export const login = (email: string, password: string) => {
   }
 };
 
-export const changePassword = (email: string, currentPassword: string, newPassword: string) => {
+export const changePassword = async (email: string, currentPassword: string, newPassword: string) => {
   try {
     const db = readDb();
-    const userIndex = db.users.findIndex(u => u.email === email && u.password === currentPassword);
+    const userIndex = db.users.findIndex(u => u.email === email);
 
     if (userIndex === -1) {
-      return { error: 'Invalid credentials' };
+      return { error: 'User not found' };
     }
 
+    const user = db.users[userIndex];
+    const validPassword = await bcrypt.compare(currentPassword, user.password);
+    if (!validPassword) {
+      return { error: 'Current password is incorrect' };
+    }
+
+    // Hash new password
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(newPassword, salt);
+
     // Update password
-    db.users[userIndex].password = newPassword;
+    db.users[userIndex].password = hashedPassword;
     writeDb(db);
 
     return { success: true };
   } catch (error) {
     console.error('Password change error:', error);
     return { error: 'Failed to change password' };
+  }
+};
+
+export const adminChangePassword = async (email: string, newPassword: string) => {
+  try {
+    const db = readDb();
+    const userIndex = db.users.findIndex(u => u.email === email);
+
+    if (userIndex === -1) {
+      return { error: 'User not found' };
+    }
+
+    // Hash new password
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(newPassword, salt);
+
+    // Update password
+    db.users[userIndex].password = hashedPassword;
+    writeDb(db);
+
+    return { success: true, message: 'Password updated successfully' };
+  } catch (error) {
+    console.error('Admin password change error:', error);
+    return { error: 'Failed to update password' };
   }
 };

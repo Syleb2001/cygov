@@ -2,6 +2,20 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Base styles */
+html {
+  font-size: 16px; /* Increased from 16px */
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  @apply antialiased;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  zoom: 1.1; /* Increased from 1 */
+}
+
 /* Tree Lines Styling */
 .tree-parent {
   position: relative;
@@ -46,4 +60,51 @@
 .tree-line.active::before,
 .tree-line.active::after {
   background-color: #4f46e5;
+}
+
+/* Ensure consistent text sizes */
+h1 { @apply text-5xl; } /* Increased from 4xl */
+h2 { @apply text-4xl; } /* Increased from 3xl */
+h3 { @apply text-3xl; } /* Increased from 2xl */
+h4 { @apply text-lg; } /* Increased from xl */
+h5 { @apply text-xl; } /* Increased from lg */
+h6 { @apply text-lg; } /* Increased from base */
+
+/* Consistent form elements */
+input, select, textarea {
+  @apply text-lg; /* Increased from base */
+}
+
+/* Consistent button text */
+button {
+  @apply text-lg; /* Increased from base */
+}
+
+/* Increase padding for better touch targets */
+button, 
+input[type="button"], 
+input[type="submit"] {
+  @apply px-4 py-2;
+}
+
+/* Increase spacing */
+.space-y-4 {
+  @apply space-y-6;
+}
+
+.space-x-4 {
+  @apply space-x-6;
+}
+
+/* Increase padding in common containers */
+.p-4 {
+  @apply p-6;
+}
+
+.px-4 {
+  @apply px-6;
+}
+
+.py-4 {
+  @apply py-6;
 }

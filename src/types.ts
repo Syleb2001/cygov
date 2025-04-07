@@ -41,6 +41,7 @@ export interface User {
   cyfunLevel: 'basic' | 'important' | 'essential';
   twoFactorSecret?: string;
   twoFactorEnabled?: boolean;
+  isAdmin?: boolean;
 }
 
 export interface POI {
@@ -91,4 +92,13 @@ export interface Notification {
   controlId?: string;
   read: boolean;
   createdAt: string;
+}
+
+// Add types for admin panel
+export interface AdminStats {
+  totalUsers: number;
+  totalControls: number;
+  totalNotes: number;
+  totalDeadlines: number;
+  totalPois: number;
 }

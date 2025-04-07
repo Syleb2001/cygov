@@ -7,14 +7,17 @@ import Reports from './pages/Reports';
 import Notes from './pages/Notes';
 import Calendar from './pages/Calendar';
 import Compliance from './pages/Compliance';
+import Admin from './pages/Admin';
 import { AuthProvider } from './context/AuthContext';
 import { NotificationsProvider } from './context/NotificationsContext';
 import ProtectedRoute from './components/ProtectedRoute';
+import ImpersonationBanner from './components/ImpersonationBanner';
 
 function App() {
   return (
     <AuthProvider>
       <NotificationsProvider>
+        <ImpersonationBanner />
         <Routes>
           <Route path="/auth" element={<Auth />} />
           <Route
@@ -62,6 +65,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <Compliance />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin"
+            element={
+              <ProtectedRoute requireAdmin>
+                <Admin />
               </ProtectedRoute>
             }
           />

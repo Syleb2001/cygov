@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { FileSpreadsheet, File as FilePdf, FileText, ChevronLeft, Download, Filter } from 'lucide-react';
+import { FileSpreadsheet, File as FilePdf, FileText, ChevronLeft, Download, Filter, Star } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { categories } from '../data/categories';
+import { functions } from '../data/functions';
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
 import jsPDF from 'jspdf';
-import type { POI } from '../types';
+import type { POI, Function, Category, Subcategory, Requirement } from '../types';
 
 type StatusFilter = 'all' | 'pending' | 'in-progress' | 'completed';
 
@@ -22,33 +22,29 @@ interface ControlStatus {
   poiContent?: string;
 }
 
-const getControlsForLevel = (level: 'basic' | 'important' | 'essential') => {
-  switch (level) {
+function getRequirementsForLevel(requirements: Requirement[], cyfunLevel?: string): Requirement[] {
+  if (!cyfunLevel) return [];
+  
+  switch (cyfunLevel) {
     case 'essential':
-      return categories.flatMap(category =>
-        category.controls.filter(control => 
-          ['basic', 'important', 'essential'].includes(control.cyfunLevel)
-        )
+      return requirements.filter(req => 
+        ['basic', 'important', 'essential'].includes(req.cyfunLevel)
       );
     case 'important':
-      return categories.flatMap(category =>
-        category.controls.filter(control => 
-          ['basic', 'important'].includes(control.cyfunLevel)
-        )
+      return requirements.filter(req => 
+        ['basic', 'important'].includes(req.cyfunLevel)
       );
     case 'basic':
     default:
-      return categories.flatMap(category =>
-        category.controls.filter(control => 
-          control.cyfunLevel === 'basic'
-        )
+      return requirements.filter(req => 
+        req.cyfunLevel === 'basic'
       );
   }
-};
+}
 
 function Reports() {
   const { user } = useAuth();
-  const [controlStatuses, setControlStatuses] = useState<Record<string, string>>({});
+  const [controlStatuses, setControlStatuses] = useState<Record<string, { userStatuses: Record<string, string> }>>({});
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [loading, setLoading] = useState(true);
   const [pois, setPois] = useState<Record<string, POI>>({});
@@ -61,17 +57,7 @@ function Reports() {
           throw new Error('Failed to fetch controls');
         }
         const statusData = await statusResponse.json();
-        const statuses: Record<string, string> = {};
-        
-        if (statusData.controls && typeof statusData.controls === 'object') {
-          Object.entries(statusData.controls).forEach(([controlId, control]: [string, any]) => {
-            if (control.userStatuses && user?.id && control.userStatuses[user.id]) {
-              statuses[controlId] = control.userStatuses[user.id];
-            }
-          });
-        }
-        
-        setControlStatuses(statuses);
+        setControlStatuses(statusData.controls || {});
 
         const poisResponse = await fetch('/api/pois');
         if (!poisResponse.ok) {
@@ -96,32 +82,60 @@ function Reports() {
     }
   }, [user]);
 
+  const getStatusForRequirement = (reqId: string, userId?: string): string => {
+    if (!userId) return 'pending';
+    
+    // Check specific requirement status first
+    const reqStatus = controlStatuses[reqId]?.userStatuses[userId];
+    if (reqStatus) return reqStatus;
+    
+    // If no specific status, check parent control status
+    const parentControlId = reqId.split('.').slice(0, -1).join('.');
+    return controlStatuses[parentControlId]?.userStatuses[userId] || 'pending';
+  };
+
   const getFilteredControls = (): ControlStatus[] => {
     if (!user) return [];
 
-    const levelControls = getControlsForLevel(user.cyfunLevel);
-    
-    return levelControls
-      .filter(control => {
-        const status = controlStatuses[control.id] || 'pending';
-        return statusFilter === 'all' || status === statusFilter;
-      })
-      .map(control => {
-        const poi = pois[control.id];
-        return {
-          id: control.id,
-          title: control.title,
-          category: categories.find(cat => 
-            cat.controls.some(c => c.id === control.id)
-          )?.name || '',
-          description: control.description,
-          status: controlStatuses[control.id] || 'pending',
-          isKeyMeasure: control.isKeyMeasure || false,
-          references: control.references?.map(ref => `${ref.name}${ref.clause ? `, ${ref.clause}` : ''}`),
-          hasPoi: Boolean(poi),
-          poiContent: poi?.content
-        };
+    // Get all requirements that match the user's level
+    const allRequirements: Requirement[] = [];
+    functions.forEach(func => {
+      func.categories.forEach(cat => {
+        cat.subcategories.forEach(subcat => {
+          const levelRequirements = getRequirementsForLevel(subcat.requirements, user.cyfunLevel);
+          allRequirements.push(...levelRequirements);
+        });
       });
+    });
+
+    // Filter based on status if needed
+    const filteredRequirements = statusFilter === 'all' 
+      ? allRequirements
+      : allRequirements.filter(req => getStatusForRequirement(req.id, user.id) === statusFilter);
+
+    // Map to control status objects
+    return filteredRequirements.map(req => {
+      const category = functions
+        .flatMap(f => f.categories)
+        .find(cat => cat.subcategories.some(sub => 
+          sub.requirements.some(r => r.id === req.id)
+        ))?.name || '';
+
+      const poi = pois[req.id];
+      const status = getStatusForRequirement(req.id, user.id);
+
+      return {
+        id: req.id,
+        title: req.title,
+        category,
+        description: req.description,
+        status,
+        isKeyMeasure: req.isKeyMeasure || false,
+        references: req.references?.map(ref => `${ref.name}${ref.clause ? `, ${ref.clause}` : ''}`),
+        hasPoi: Boolean(poi),
+        poiContent: poi?.content
+      };
+    });
   };
 
   const exportToExcel = () => {
@@ -235,13 +249,28 @@ function Reports() {
     );
   }
 
-  const filteredControls = getFilteredControls();
+  // Get all requirements for stats calculation
+  const allRequirements: Requirement[] = [];
+  functions.forEach(func => {
+    func.categories.forEach(cat => {
+      cat.subcategories.forEach(subcat => {
+        const levelRequirements = getRequirementsForLevel(subcat.requirements, user?.cyfunLevel);
+        allRequirements.push(...levelRequirements);
+      });
+    });
+  });
+
   const stats = {
-    total: filteredControls.length,
-    completed: filteredControls.filter(c => c.status === 'completed').length,
-    inProgress: filteredControls.filter(c => c.status === 'in-progress').length,
-    pending: filteredControls.filter(c => c.status === 'pending').length,
+    total: allRequirements.length,
+    completed: allRequirements.filter(req => getStatusForRequirement(req.id, user?.id) === 'completed').length,
+    inProgress: allRequirements.filter(req => getStatusForRequirement(req.id, user?.id) === 'in-progress').length,
+    pending: allRequirements.filter(req => {
+      const status = getStatusForRequirement(req.id, user?.id);
+      return !status || status === 'pending';
+    }).length,
   };
+
+  const filteredControls = getFilteredControls();
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -384,7 +413,15 @@ function Reports() {
                         {control.category}
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-500">
-                        {control.title}
+                        <div className="flex items-center gap-1">
+                          {control.title}
+                          {control.isKeyMeasure && (
+                            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
+                              <Star className="h-3 w-3 mr-0.5" />
+                              Key Measure
+                            </span>
+                          )}
+                        </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${

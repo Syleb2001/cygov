@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ChevronLeft, Plus, Image, Send, Trash2, Edit2, X, Check, MessageSquare } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { categories } from '../data/categories';
+import { functions } from '../data/functions';
 import type { Note } from '../types';
 
 export default function Notes() {
@@ -82,7 +82,6 @@ export default function Notes() {
         body: JSON.stringify({
           controlId: selectedControl,
           userId: user.id,
-          companyId: user.companyName,
           content: newNote.trim(),
           attachments: []
         })
@@ -154,12 +153,13 @@ export default function Notes() {
     setEditContent(note.content);
   };
 
-  // Get all controls that are in progress
-  const inProgressControls = categories.flatMap(category =>
-    category.controls.filter(control => {
-      const status = controlStatuses[control.id] || 'pending';
-      return status === 'in-progress';
-    })
+  // Get all requirements that are in progress
+  const inProgressRequirements = functions.flatMap(func =>
+    func.categories.flatMap(cat =>
+      cat.subcategories.flatMap(subcat =>
+        subcat.requirements.filter(req => controlStatuses[req.id] === 'in-progress')
+      )
+    )
   );
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -201,23 +201,23 @@ export default function Notes() {
               <div className="lg:col-span-1 space-y-4">
                 <h3 className="text-lg font-medium text-gray-900">Controls In Progress</h3>
                 <div className="space-y-2">
-                  {inProgressControls.length > 0 ? (
-                    inProgressControls.map(control => (
+                  {inProgressRequirements.length > 0 ? (
+                    inProgressRequirements.map(req => (
                       <button
-                        key={control.id}
-                        onClick={() => setSelectedControl(control.id)}
+                        key={req.id}
+                        onClick={() => setSelectedControl(req.id)}
                         className={`w-full text-left px-4 py-3 rounded-lg border ${
-                          selectedControl === control.id
+                          selectedControl === req.id
                             ? 'bg-indigo-50 border-indigo-200'
                             : 'bg-white border-gray-200 hover:bg-gray-50'
                         }`}
                       >
                         <div className="flex items-center justify-between">
-                          <span className="font-medium text-gray-900">{control.id}</span>
+                          <span className="font-medium text-gray-900">{req.id}</span>
                           <MessageSquare className="h-4 w-4 text-gray-400" />
                         </div>
                         <p className="mt-1 text-sm text-gray-500 line-clamp-2">
-                          {control.title}
+                          {req.title}
                         </p>
                       </button>
                     ))
