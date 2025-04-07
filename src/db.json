@@ -5,11 +5,11 @@
       "firstName": "Sylvain",
       "lastName": "Lebailly",
       "email": "sylvain.lebailly@anderson.be",
-      "password": "$2a$10$IeWnSZUyRpqKPeDvwoFSV.XhVW/HORT.YHsSheneEmoZ3EVDEmHYm",
+      "password": "$2a$10$RJNcYxGN9jX0i/qP3RjtB.Pr.zlBqSh2yKP.ziRQEIttCXZ687wEq",
       "cyfunLevel": "basic",
       "id": "ed07ad25-690b-492f-b63f-e9a905217ec3",
       "twoFactorSecret": "PJHHGY3YNUXDKQZIKB3UQ4TXEZRFMQB2LBYFE3JDIVVVEQCVGBSQ",
-      "twoFactorEnabled": true
+      "twoFactorEnabled": false
     },
     {
       "companyName": "CEPS",
@@ -46,9 +46,73 @@
       "lastName": "Lebailly",
       "email": "sylvain@bitopia.ae",
       "password": "$2a$10$5IybAOw0rRn2tYMABIebaOyujj07nv9ULit6pJYCTKIXuj62/Cn.2",
-      "cyfunLevel": "important",
+      "cyfunLevel": "basic",
       "id": "9b25825e-0476-44ac-9623-9ee9624751a6",
+      "isAdmin": true,
+      "twoFactorSecret": "PAZVE6ZEOUXWGMJGINEG433PFJLWKZ2AIIZV2VJDGZQXKMKSOR2A",
+      "twoFactorEnabled": false
+    },
+    {
+      "companyName": "Vanity",
+      "firstName": "James",
+      "lastName": "Anderson",
+      "email": "sylvain@vanity.be",
+      "password": "$2a$10$vJvyL6Eow.O/EcjXEw8x6ekEYqNV4VSl2rYgDJHb.3RLxuE.VYa.a",
+      "cyfunLevel": "basic",
+      "id": "02ef88a4-80a7-43d5-bd6d-d8117aed7077",
+      "twoFactorSecret": "PFOXCNTXHFZFE3J6IVRFKQRJFQ4HIRRDMY3GO526NU7DO3LWPBXQ",
+      "twoFactorEnabled": false,
       "isAdmin": true
+    },
+    {
+      "firstName": "Sylvain",
+      "lastName": "Lebailly",
+      "email": "sylvain.lebailly@bitopia.ae",
+      "cyfunLevel": "basic",
+      "companyName": "Bitopia",
+      "id": "0524b1f4-cf0b-4b23-88e1-3d48652e1776",
+      "twoFactorEnabled": false,
+      "isActive": false
+    },
+    {
+      "firstName": "kgoe",
+      "lastName": "fndl",
+      "email": "syl200126@bitopia.ae",
+      "cyfunLevel": "basic",
+      "companyName": "Bitopia",
+      "id": "94912723-476b-43d4-873c-56c79741bc7b",
+      "twoFactorEnabled": false,
+      "isActive": false
+    },
+    {
+      "firstName": "Johnny",
+      "lastName": "Well",
+      "email": "test123@bitopia.ae",
+      "cyfunLevel": "basic",
+      "companyName": "Bitopia",
+      "id": "be37e71f-69ab-4174-9ed5-fed793638cc7",
+      "twoFactorEnabled": false,
+      "isActive": false
+    },
+    {
+      "firstName": "Johny",
+      "lastName": "Well",
+      "email": "test12@bitopia.ae",
+      "cyfunLevel": "basic",
+      "companyName": "Bitopia",
+      "id": "dd7c6b05-56a3-4327-88de-ab715fd99e8d",
+      "twoFactorEnabled": false,
+      "isActive": false
+    },
+    {
+      "firstName": "okk",
+      "lastName": "olj",
+      "email": "okk@bitopia.ae",
+      "cyfunLevel": "basic",
+      "companyName": "Bitopia",
+      "id": "dd71ed06-de5f-4340-8cc2-ccf848ae8746",
+      "twoFactorEnabled": false,
+      "isActive": false
     }
   ],
   "controls": {
@@ -57,16 +121,14 @@
         "f8d68f83-bf3a-4630-bcef-e18ebc5b78e7": "completed",
         "ed07ad25-690b-492f-b63f-e9a905217ec3": "completed",
         "3029d179-d15c-4fdf-8438-550ed2c11a0c": "completed",
-        "5bb28030-f154-4906-8841-9717ee152ef1": "completed",
-        "9b25825e-0476-44ac-9623-9ee9624751a6": "completed"
+        "5bb28030-f154-4906-8841-9717ee152ef1": "completed"
       }
     },
     "ID.AM-2": {
       "userStatuses": {
         "ed07ad25-690b-492f-b63f-e9a905217ec3": "completed",
         "f8d68f83-bf3a-4630-bcef-e18ebc5b78e7": "in-progress",
-        "5bb28030-f154-4906-8841-9717ee152ef1": "completed",
-        "9b25825e-0476-44ac-9623-9ee9624751a6": "completed"
+        "5bb28030-f154-4906-8841-9717ee152ef1": "completed"
       }
     },
     "ID.AM-3": {
@@ -74,35 +136,30 @@
         "ed07ad25-690b-492f-b63f-e9a905217ec3": "completed",
         "f8d68f83-bf3a-4630-bcef-e18ebc5b78e7": "completed",
         "3029d179-d15c-4fdf-8438-550ed2c11a0c": "in-progress",
-        "5bb28030-f154-4906-8841-9717ee152ef1": "in-progress",
-        "9b25825e-0476-44ac-9623-9ee9624751a6": "completed"
+        "5bb28030-f154-4906-8841-9717ee152ef1": "in-progress"
       }
     },
     "ID.GV-1": {
       "userStatuses": {
-        "ed07ad25-690b-492f-b63f-e9a905217ec3": "completed",
-        "9b25825e-0476-44ac-9623-9ee9624751a6": "completed"
+        "ed07ad25-690b-492f-b63f-e9a905217ec3": "completed"
       }
     },
     "RC.RP-1": {
       "userStatuses": {
         "f8d68f83-bf3a-4630-bcef-e18ebc5b78e7": "completed",
-        "ed07ad25-690b-492f-b63f-e9a905217ec3": "completed",
-        "9b25825e-0476-44ac-9623-9ee9624751a6": "completed"
+        "ed07ad25-690b-492f-b63f-e9a905217ec3": "completed"
       }
     },
     "PR.AC-1": {
       "userStatuses": {
         "f8d68f83-bf3a-4630-bcef-e18ebc5b78e7": "completed",
-        "ed07ad25-690b-492f-b63f-e9a905217ec3": "in-progress",
-        "9b25825e-0476-44ac-9623-9ee9624751a6": "completed"
+        "ed07ad25-690b-492f-b63f-e9a905217ec3": "in-progress"
       }
     },
     "PR.AC-2": {
       "userStatuses": {
         "f8d68f83-bf3a-4630-bcef-e18ebc5b78e7": "completed",
-        "ed07ad25-690b-492f-b63f-e9a905217ec3": "in-progress",
-        "9b25825e-0476-44ac-9623-9ee9624751a6": "completed"
+        "ed07ad25-690b-492f-b63f-e9a905217ec3": "in-progress"
       }
     },
     "DE.AE-3": {
@@ -112,8 +169,7 @@
     },
     "PR.AC-3": {
       "userStatuses": {
-        "ed07ad25-690b-492f-b63f-e9a905217ec3": "completed",
-        "9b25825e-0476-44ac-9623-9ee9624751a6": "in-progress"
+        "ed07ad25-690b-492f-b63f-e9a905217ec3": "completed"
       }
     },
     "DE.CM-1": {
@@ -129,14 +185,12 @@
     "ID.AM-4": {
       "userStatuses": {
         "ed07ad25-690b-492f-b63f-e9a905217ec3": "completed",
-        "5bb28030-f154-4906-8841-9717ee152ef1": "completed",
-        "9b25825e-0476-44ac-9623-9ee9624751a6": "completed"
+        "5bb28030-f154-4906-8841-9717ee152ef1": "completed"
       }
     },
     "PR.PT-4": {
       "userStatuses": {
-        "ed07ad25-690b-492f-b63f-e9a905217ec3": "pending",
-        "9b25825e-0476-44ac-9623-9ee9624751a6": "in-progress"
+        "ed07ad25-690b-492f-b63f-e9a905217ec3": "pending"
       }
     },
     "PR.PT-1": {
@@ -181,14 +235,12 @@
     },
     "PR.AC-5": {
       "userStatuses": {
-        "ed07ad25-690b-492f-b63f-e9a905217ec3": "in-progress",
-        "9b25825e-0476-44ac-9623-9ee9624751a6": "completed"
+        "ed07ad25-690b-492f-b63f-e9a905217ec3": "in-progress"
       }
     },
     "PR.AC-4": {
       "userStatuses": {
-        "ed07ad25-690b-492f-b63f-e9a905217ec3": "completed",
-        "9b25825e-0476-44ac-9623-9ee9624751a6": "completed"
+        "ed07ad25-690b-492f-b63f-e9a905217ec3": "completed"
       }
     },
     "DE.CM-3": {
@@ -203,14 +255,12 @@
     },
     "RS.RP-1": {
       "userStatuses": {
-        "ed07ad25-690b-492f-b63f-e9a905217ec3": "completed",
-        "9b25825e-0476-44ac-9623-9ee9624751a6": "completed"
+        "ed07ad25-690b-492f-b63f-e9a905217ec3": "completed"
       }
     },
     "RS.CO-3": {
       "userStatuses": {
-        "ed07ad25-690b-492f-b63f-e9a905217ec3": "completed",
-        "9b25825e-0476-44ac-9623-9ee9624751a6": "completed"
+        "ed07ad25-690b-492f-b63f-e9a905217ec3": "completed"
       }
     },
     "RS.IM-1": {
@@ -222,98 +272,72 @@
       "userStatuses": {
         "ed07ad25-690b-492f-b63f-e9a905217ec3": "completed",
         "3029d179-d15c-4fdf-8438-550ed2c11a0c": "completed",
-        "5bb28030-f154-4906-8841-9717ee152ef1": "completed",
-        "9b25825e-0476-44ac-9623-9ee9624751a6": "completed"
+        "5bb28030-f154-4906-8841-9717ee152ef1": "completed"
       }
     },
     "ID.GV-3": {
       "userStatuses": {
-        "ed07ad25-690b-492f-b63f-e9a905217ec3": "completed",
-        "9b25825e-0476-44ac-9623-9ee9624751a6": "completed"
+        "ed07ad25-690b-492f-b63f-e9a905217ec3": "completed"
       }
     },
     "ID.GV-4": {
       "userStatuses": {
-        "ed07ad25-690b-492f-b63f-e9a905217ec3": "completed",
-        "9b25825e-0476-44ac-9623-9ee9624751a6": "completed"
+        "ed07ad25-690b-492f-b63f-e9a905217ec3": "completed"
       }
     },
     "ID.RA-1": {
       "userStatuses": {
         "ed07ad25-690b-492f-b63f-e9a905217ec3": "completed",
-        "5bb28030-f154-4906-8841-9717ee152ef1": "completed",
-        "9b25825e-0476-44ac-9623-9ee9624751a6": "completed"
+        "5bb28030-f154-4906-8841-9717ee152ef1": "completed"
       }
     },
     "ID.RA-5": {
       "userStatuses": {
-        "ed07ad25-690b-492f-b63f-e9a905217ec3": "completed",
-        "9b25825e-0476-44ac-9623-9ee9624751a6": "in-progress"
+        "ed07ad25-690b-492f-b63f-e9a905217ec3": "completed"
       }
     },
     "RS.IM-11": {
-      "userStatuses": {
-        "9b25825e-0476-44ac-9623-9ee9624751a6": "completed"
-      }
+      "userStatuses": {}
     },
     "ID.AM-6": {
-      "userStatuses": {
-        "9b25825e-0476-44ac-9623-9ee9624751a6": "completed"
-      }
+      "userStatuses": {}
     },
     "ID.BE-1": {
-      "userStatuses": {
-        "9b25825e-0476-44ac-9623-9ee9624751a6": "in-progress"
-      }
+      "userStatuses": {}
     },
     "RC.CO-1": {
-      "userStatuses": {
-        "9b25825e-0476-44ac-9623-9ee9624751a6": "in-progress"
-      }
+      "userStatuses": {}
     },
     "RS.IM-2": {
-      "userStatuses": {
-        "9b25825e-0476-44ac-9623-9ee9624751a6": "completed"
-      }
+      "userStatuses": {}
     },
     "RS.AN-2": {
-      "userStatuses": {
-        "9b25825e-0476-44ac-9623-9ee9624751a6": "completed"
-      }
+      "userStatuses": {}
     },
     "RS.CO-1": {
-      "userStatuses": {
-        "9b25825e-0476-44ac-9623-9ee9624751a6": "completed"
-      }
+      "userStatuses": {}
     },
     "PR.PT-3": {
-      "userStatuses": {
-        "9b25825e-0476-44ac-9623-9ee9624751a6": "completed"
-      }
+      "userStatuses": {}
     },
     "PR.PT-2": {
-      "userStatuses": {
-        "9b25825e-0476-44ac-9623-9ee9624751a6": "completed"
-      }
+      "userStatuses": {}
     },
     "RC.CO-3": {
-      "userStatuses": {
-        "9b25825e-0476-44ac-9623-9ee9624751a6": "completed"
-      }
+      "userStatuses": {}
     },
     "ID.BE-2": {
-      "userStatuses": {
-        "9b25825e-0476-44ac-9623-9ee9624751a6": "completed"
-      }
+      "userStatuses": {}
     },
     "ID.BE-3": {
-      "userStatuses": {
-        "9b25825e-0476-44ac-9623-9ee9624751a6": "in-progress"
-      }
+      "userStatuses": {}
     },
     "ID.AM-1.1": {
       "userStatuses": {
-        "9b25825e-0476-44ac-9623-9ee9624751a6": "completed"
+        "26490a44-9edd-4e58-aab1-d58a31b91b17": "completed",
+        "02ef88a4-80a7-43d5-bd6d-d8117aed7077": "completed",
+        "9b25825e-0476-44ac-9623-9ee9624751a6": "completed",
+        "ed07ad25-690b-492f-b63f-e9a905217ec3": "pending"
       }
     },
     "ID.RA-1.1": {
@@ -322,13 +346,11 @@
       }
     },
     "ID.RA-5.1": {
-      "userStatuses": {
-        "9b25825e-0476-44ac-9623-9ee9624751a6": "completed"
-      }
+      "userStatuses": {}
     },
     "PR.AC-3.1": {
       "userStatuses": {
-        "9b25825e-0476-44ac-9623-9ee9624751a6": "pending"
+        "02ef88a4-80a7-43d5-bd6d-d8117aed7077": "completed"
       }
     },
     "ID.AM-2.1": {
@@ -338,6 +360,8 @@
     },
     "PR.AC-1.1": {
       "userStatuses": {
+        "02ef88a4-80a7-43d5-bd6d-d8117aed7077": "completed",
+        "ed07ad25-690b-492f-b63f-e9a905217ec3": "completed",
         "9b25825e-0476-44ac-9623-9ee9624751a6": "completed"
       }
     },
@@ -363,32 +387,40 @@
     },
     "PR.AC-3.2": {
       "userStatuses": {
-        "9b25825e-0476-44ac-9623-9ee9624751a6": "completed"
+        "02ef88a4-80a7-43d5-bd6d-d8117aed7077": "completed"
       }
     },
     "PR.AC-4.4": {
       "userStatuses": {
-        "9b25825e-0476-44ac-9623-9ee9624751a6": "completed"
+        "02ef88a4-80a7-43d5-bd6d-d8117aed7077": "completed"
       }
     },
     "PR.AC-5.1": {
       "userStatuses": {
-        "9b25825e-0476-44ac-9623-9ee9624751a6": "pending"
+        "02ef88a4-80a7-43d5-bd6d-d8117aed7077": "completed",
+        "ed07ad25-690b-492f-b63f-e9a905217ec3": "completed"
       }
     },
     "PR.AT-1.1": {
       "userStatuses": {
-        "9b25825e-0476-44ac-9623-9ee9624751a6": "completed"
+        "02ef88a4-80a7-43d5-bd6d-d8117aed7077": "completed",
+        "9b25825e-0476-44ac-9623-9ee9624751a6": "completed",
+        "ed07ad25-690b-492f-b63f-e9a905217ec3": "completed"
       }
     },
     "PR.DS-3.1": {
       "userStatuses": {
-        "9b25825e-0476-44ac-9623-9ee9624751a6": "pending"
+        "26490a44-9edd-4e58-aab1-d58a31b91b17": "in-progress",
+        "02ef88a4-80a7-43d5-bd6d-d8117aed7077": "completed",
+        "9b25825e-0476-44ac-9623-9ee9624751a6": "completed",
+        "ed07ad25-690b-492f-b63f-e9a905217ec3": "completed"
       }
     },
     "ID.GV-1.1": {
       "userStatuses": {
-        "9b25825e-0476-44ac-9623-9ee9624751a6": "completed"
+        "26490a44-9edd-4e58-aab1-d58a31b91b17": "completed",
+        "02ef88a4-80a7-43d5-bd6d-d8117aed7077": "completed",
+        "ed07ad25-690b-492f-b63f-e9a905217ec3": "completed"
       }
     },
     "RC.RP-1.1": {
@@ -398,57 +430,62 @@
     },
     "ID.AM-3.1": {
       "userStatuses": {
-        "9b25825e-0476-44ac-9623-9ee9624751a6": "pending"
+        "9b25825e-0476-44ac-9623-9ee9624751a6": "completed"
       }
     },
     "ID.AM-5.1": {
-      "userStatuses": {
-        "9b25825e-0476-44ac-9623-9ee9624751a6": "in-progress"
-      }
+      "userStatuses": {}
     },
     "PR.AC-2.1": {
       "userStatuses": {
-        "9b25825e-0476-44ac-9623-9ee9624751a6": "completed"
+        "02ef88a4-80a7-43d5-bd6d-d8117aed7077": "completed",
+        "9b25825e-0476-44ac-9623-9ee9624751a6": "completed",
+        "ed07ad25-690b-492f-b63f-e9a905217ec3": "completed"
       }
     },
     "PR.AC-4.3": {
       "userStatuses": {
-        "9b25825e-0476-44ac-9623-9ee9624751a6": "completed"
+        "02ef88a4-80a7-43d5-bd6d-d8117aed7077": "completed"
       }
     },
     "PR.AC-4.2": {
       "userStatuses": {
-        "9b25825e-0476-44ac-9623-9ee9624751a6": "completed"
+        "02ef88a4-80a7-43d5-bd6d-d8117aed7077": "completed"
       }
     },
     "PR.AC-4.1": {
       "userStatuses": {
-        "9b25825e-0476-44ac-9623-9ee9624751a6": "completed"
+        "02ef88a4-80a7-43d5-bd6d-d8117aed7077": "pending"
       }
     },
     "PR.AC-5.2": {
       "userStatuses": {
-        "9b25825e-0476-44ac-9623-9ee9624751a6": "completed"
+        "02ef88a4-80a7-43d5-bd6d-d8117aed7077": "completed",
+        "ed07ad25-690b-492f-b63f-e9a905217ec3": "completed"
       }
     },
     "PR.MA-1.1": {
       "userStatuses": {
-        "9b25825e-0476-44ac-9623-9ee9624751a6": "completed"
+        "9b25825e-0476-44ac-9623-9ee9624751a6": "completed",
+        "ed07ad25-690b-492f-b63f-e9a905217ec3": "completed"
       }
     },
     "PR.PT-1.1": {
       "userStatuses": {
-        "9b25825e-0476-44ac-9623-9ee9624751a6": "in-progress"
+        "9b25825e-0476-44ac-9623-9ee9624751a6": "completed"
       }
     },
     "PR.PT-4.1": {
       "userStatuses": {
+        "ed07ad25-690b-492f-b63f-e9a905217ec3": "completed",
         "9b25825e-0476-44ac-9623-9ee9624751a6": "completed"
       }
     },
     "ID.GV-3.1": {
       "userStatuses": {
-        "9b25825e-0476-44ac-9623-9ee9624751a6": "pending"
+        "26490a44-9edd-4e58-aab1-d58a31b91b17": "in-progress",
+        "02ef88a4-80a7-43d5-bd6d-d8117aed7077": "in-progress",
+        "9b25825e-0476-44ac-9623-9ee9624751a6": "completed"
       }
     },
     "RS.CO-3.1": {
@@ -457,18 +494,31 @@
       }
     },
     "RS.IM-1.1": {
-      "userStatuses": {
-        "9b25825e-0476-44ac-9623-9ee9624751a6": "in-progress"
-      }
+      "userStatuses": {}
     },
     "ID.GV-4.1": {
-      "userStatuses": {
-        "9b25825e-0476-44ac-9623-9ee9624751a6": "pending"
-      }
+      "userStatuses": {}
     },
     "DE.CM-3.1": {
       "userStatuses": {
         "9b25825e-0476-44ac-9623-9ee9624751a6": "in-progress"
+      }
+    },
+    "ID.AM-1.3": {
+      "userStatuses": {
+        "26490a44-9edd-4e58-aab1-d58a31b91b17": "completed",
+        "02ef88a4-80a7-43d5-bd6d-d8117aed7077": "completed"
+      }
+    },
+    "ID.AM-2.4": {
+      "userStatuses": {}
+    },
+    "ID.AM-2.3": {
+      "userStatuses": {}
+    },
+    "DE.CM-1.1": {
+      "userStatuses": {
+        "9b25825e-0476-44ac-9623-9ee9624751a6": "completed"
       }
     }
   }

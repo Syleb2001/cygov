@@ -15,6 +15,7 @@ interface AuthContextType {
   stopImpersonating: () => void;
   isReadOnly: boolean;
   setIsReadOnly: (value: boolean) => void;
+  realUser: Omit<User, 'password'> | null;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -34,7 +35,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     if (storedUser) {
       try {
-        setUser(JSON.parse(storedUser));
+        const userData = JSON.parse(storedUser);
+        setUser(userData);
+        
+        // Check if user has read-only flag in localStorage
+        const userReadOnly = localStorage.getItem(`readOnly_${userData.id}`);
+        if (userReadOnly) {
+          setIsReadOnly(JSON.parse(userReadOnly));
+        }
       } catch (error) {
         console.error('Error parsing stored user:', error);
         sessionStorage.removeItem('user');
@@ -60,6 +68,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const setUserAndRedirect = (userData: Omit<User, 'password'>) => {
     setUser(userData);
     sessionStorage.setItem('user', JSON.stringify(userData));
+    
+    // Check if user has read-only flag in localStorage
+    const userReadOnly = localStorage.getItem(`readOnly_${userData.id}`);
+    if (userReadOnly) {
+      setIsReadOnly(JSON.parse(userReadOnly));
+    }
+    
     setShowSuccessMessage(true);
     setTimeout(() => {
       setShowSuccessMessage(false);
@@ -75,6 +90,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const impersonateUser = (userData: Omit<User, 'password'>) => {
     setImpersonatedUser(userData);
     sessionStorage.setItem('impersonatedUser', JSON.stringify(userData));
+    
+    // If real user is admin, don't set read-only mode
+    if (!user?.isAdmin) {
+      setIsReadOnly(true);
+      sessionStorage.setItem('isReadOnly', 'true');
+    }
+    
     navigate('/');
   };
 
@@ -104,6 +126,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return data;
       }
 
+      // Check if user has read-only flag in localStorage
+      const userReadOnly = localStorage.getItem(`readOnly_${data.user.id}`);
+      if (userReadOnly) {
+        setIsReadOnly(JSON.parse(userReadOnly));
+      }
+
       setUserAndRedirect(data.user);
     } catch (error) {
       throw error;
@@ -111,6 +139,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const logout = () => {
+    const userId = user?.id;
     setUser(null);
     setImpersonatedUser(null);
     setIsReadOnly(false);
@@ -120,9 +149,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     navigate('/auth');
   };
 
+  // Update isReadOnly setter to also store in localStorage
+  const handleSetIsReadOnly = (value: boolean) => {
+    // If real user is admin, never set to read-only
+    if (user?.isAdmin) {
+      value = false;
+    }
+    
+    setIsReadOnly(value);
+    sessionStorage.setItem('isReadOnly', JSON.stringify(value));
+    
+    // If we're setting read-only for a real user (not impersonating)
+    if (user && !impersonatedUser) {
+      localStorage.setItem(`readOnly_${user.id}`, JSON.stringify(value));
+    }
+  };
+
   return (
     <AuthContext.Provider value={{ 
-      user, 
+      user: impersonatedUser || user, 
       impersonatedUser,
       login, 
       setUserAndRedirect, 
@@ -133,7 +178,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       impersonateUser,
       stopImpersonating,
       isReadOnly,
-      setIsReadOnly
+      setIsReadOnly: handleSetIsReadOnly,
+      realUser: user
     }}>
       {children}
     </AuthContext.Provider>

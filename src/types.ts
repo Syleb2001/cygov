@@ -42,6 +42,7 @@ export interface User {
   twoFactorSecret?: string;
   twoFactorEnabled?: boolean;
   isAdmin?: boolean;
+  isActive?: boolean; // New field to track if user has completed setup
 }
 
 export interface POI {

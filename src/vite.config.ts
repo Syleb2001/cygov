@@ -17,6 +17,7 @@ export default defineConfig({
         const CHAT_PATH = path.join(process.cwd(), 'src/chat.json');
         const CALENDAR_PATH = path.join(process.cwd(), 'src/calendar.json');
         const POI_PATH = path.join(process.cwd(), 'src/poi.json');
+        const MATURITY_PATH = path.join(process.cwd(), 'src/maturity.json');
 
         const readDb = (): { 
           users: User[]; 
@@ -29,24 +30,7 @@ export default defineConfig({
               return initialData;
             }
             const data = fs.readFileSync(DB_PATH, 'utf-8');
-            const parsedData = JSON.parse(data);
-            
-            if (!parsedData.controls) {
-              parsedData.controls = {};
-            }
-            
-            Object.entries(parsedData.controls).forEach(([controlId, control]: [string, any]) => {
-              if (!control.userStatuses && control.userId && control.status) {
-                parsedData.controls[controlId] = {
-                  userStatuses: {
-                    [control.userId]: control.status
-                  }
-                };
-              }
-            });
-            
-            fs.writeFileSync(DB_PATH, JSON.stringify(parsedData, null, 2), 'utf-8');
-            return parsedData;
+            return JSON.parse(data);
           } catch (error) {
             console.error('Error reading database:', error);
             return { users: [], controls: {} };
@@ -95,6 +79,21 @@ export default defineConfig({
           } catch (error) {
             console.error('Error reading POI database:', error);
             return { pois: [] };
+          }
+        };
+
+        const readMaturity = (): { users: Record<string, { scores: Record<string, number> }> } => {
+          try {
+            if (!fs.existsSync(MATURITY_PATH)) {
+              const initialData = { users: {} };
+              fs.writeFileSync(MATURITY_PATH, JSON.stringify(initialData, null, 2), 'utf-8');
+              return initialData;
+            }
+            const data = fs.readFileSync(MATURITY_PATH, 'utf-8');
+            return JSON.parse(data);
+          } catch (error) {
+            console.error('Error reading maturity database:', error);
+            return { users: {} };
           }
         };
 
@@ -153,6 +152,19 @@ export default defineConfig({
           }
         };
 
+        const writeMaturity = (data: { users: Record<string, { scores: Record<string, number> }> }) => {
+          try {
+            const dir = path.dirname(MATURITY_PATH);
+            if (!fs.existsSync(dir)) {
+              fs.mkdirSync(dir, { recursive: true });
+            }
+            fs.writeFileSync(MATURITY_PATH, JSON.stringify(data, null, 2), 'utf-8');
+          } catch (error) {
+            console.error('Error writing to maturity database:', error);
+            throw new Error('Failed to save maturity data');
+          }
+        };
+
         server.middlewares.use(async (req, res, next) => {
           if (req.method === 'OPTIONS') {
             res.writeHead(200, {
@@ -168,6 +180,62 @@ export default defineConfig({
           res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
           res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
           res.setHeader('Content-Type', 'application/json');
+
+          if (req.url?.startsWith('/api/maturity')) {
+            const maturityData = readMaturity();
+
+            if (req.method === 'GET') {
+              const url = new URL(req.url, `http://${req.headers.host}`);
+              const userId = url.searchParams.get('userId');
+              
+              if (!userId) {
+                res.statusCode = 400;
+                res.end(JSON.stringify({ error: 'User ID is required' }));
+                return;
+              }
+
+              const userScores = maturityData.users[userId]?.scores || {};
+              res.end(JSON.stringify({ scores: userScores }));
+              return;
+            }
+
+            if (req.method === 'POST') {
+              let body = '';
+              req.on('data', chunk => {
+                body += chunk.toString();
+              });
+
+              req.on('end', () => {
+                try {
+                  const { requirementId, level, userId } = JSON.parse(body);
+                  
+                  if (!requirementId || !userId || typeof level !== 'number' || level < 1 || level > 5) {
+                    res.statusCode = 400;
+                    res.end(JSON.stringify({ error: 'Invalid maturity data' }));
+                    return;
+                  }
+
+                  if (!maturityData.users[userId]) {
+                    maturityData.users[userId] = { scores: {} };
+                  }
+
+                  maturityData.users[userId].scores[requirementId] = level;
+                  writeMaturity(maturityData);
+
+                  res.end(JSON.stringify({ 
+                    success: true,
+                    requirementId,
+                    level
+                  }));
+                } catch (error) {
+                  console.error('Error updating maturity:', error);
+                  res.statusCode = 500;
+                  res.end(JSON.stringify({ error: 'Failed to update maturity level' }));
+                }
+              });
+              return;
+            }
+          }
 
           if (req.url?.startsWith('/api/pois')) {
             const poi = readPoi();
@@ -547,13 +615,17 @@ export default defineConfig({
             if (req.method === 'GET') {
               try {
                 const db = readDb();
-                res.end(JSON.stringify({ controls: db.controls || {} }));
+                if (!db.controls) {
+                  db.controls = {};
+                }
+                res.end(JSON.stringify({ controls: db.controls }));
+                return;
               } catch (error) {
                 console.error('Error fetching controls:', error);
                 res.statusCode = 500;
                 res.end(JSON.stringify({ error: 'Failed to fetch controls' }));
+                return;
               }
-              return;
             }
 
             if (req.method === 'POST') {
@@ -741,7 +813,6 @@ export default defineConfig({
                       return;
                     }
 
-                    // Reset all control statuses for this user
                     if (data.userId) {
                       Object.keys(db.controls).forEach(controlId => {
                         if (db.controls[controlId].userStatuses && db.controls[controlId].userStatuses[data.userId]) {
@@ -788,6 +859,7 @@ export default defineConfig({
                     res.end(JSON.stringify({
                       secret: secret.base32,
                       otpAuthUrl: secret.otpauth_url
+                
                     }));
                     return;
                   }
@@ -803,13 +875,13 @@ export default defineConfig({
                     }
 
                     const verified = speakeasy.totp.verify({
-                      secret: data.secret,
+                      secret: user.twoFactorSecret,
                       encoding: 'base32',
                       token: data.token
                     });
 
                     if (!verified) {
-                      res.statusCode = 400;
+                      res.statusCode = 401;
                       res.end(JSON.stringify({ error: 'Invalid verification code' }));
                       return;
                     }
@@ -824,25 +896,22 @@ export default defineConfig({
                     res.end(JSON.stringify({ success: true }));
                     return;
                   }
+
+                  res.statusCode = 404;
+                  res.end(JSON.stringify({ error: 'Endpoint not found' }));
                 } catch (error) {
-                  console.error('Error processing request:', error);
+                  console.error('Error in auth endpoint:', error);
                   res.statusCode = 500;
                   res.end(JSON.stringify({ error: 'Internal server error' }));
                 }
               });
-            } else {
-              res.statusCode = 404;
-              res.end(JSON.stringify({ error: 'Not found' }));
+              return;
             }
-            return;
           }
 
           next();
         });
       }
     }
-  ],
-  optimizeDeps: {
-    exclude: ['lucide-react'],
-  },
+  ]
 });

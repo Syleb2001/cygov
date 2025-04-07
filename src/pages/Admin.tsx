@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { 
   ChevronLeft, Users, Shield, Calendar, FileText, MessageSquare, Search,
-  UserCheck, Eye, EyeOff, ArrowRight, Key, X, CheckCircle
+  UserCheck, Eye, EyeOff, ArrowRight, Key, X, CheckCircle, Lock
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import type { User, Note, Deadline, POI, AdminStats } from '../types';
@@ -34,6 +34,7 @@ export default function Admin() {
   const [passwordError, setPasswordError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [selectedUserEmail, setSelectedUserEmail] = useState<string>('');
+  const [readOnlyUsers, setReadOnlyUsers] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     if (user && !user.isAdmin) {
@@ -73,6 +74,16 @@ export default function Admin() {
       const notes = Array.isArray(notesData.notes) ? notesData.notes : [];
       const deadlines = Array.isArray(deadlinesData.deadlines) ? deadlinesData.deadlines : [];
       const pois = Array.isArray(poisData.pois) ? poisData.pois : [];
+
+      // Load read-only states from localStorage
+      const readOnlyStates: Record<string, boolean> = {};
+      users.forEach(user => {
+        const storedState = localStorage.getItem(`readOnly_${user.id}`);
+        if (storedState) {
+          readOnlyStates[user.id] = JSON.parse(storedState);
+        }
+      });
+      setReadOnlyUsers(readOnlyStates);
 
       setUsers(users);
       setNotes(notes);
@@ -131,10 +142,18 @@ export default function Admin() {
     }
   };
 
-  const handleImpersonateUser = (selectedUser: User, readOnly: boolean = false) => {
+  const handleImpersonateUser = (selectedUser: User) => {
     const { password, ...userWithoutPassword } = selectedUser;
     impersonateUser(userWithoutPassword);
-    setIsReadOnly(readOnly);
+    setIsReadOnly(readOnlyUsers[selectedUser.id] || false);
+  };
+
+  const handleReadOnlyChange = (userId: string, checked: boolean) => {
+    setReadOnlyUsers(prev => ({
+      ...prev,
+      [userId]: checked
+    }));
+    localStorage.setItem(`readOnly_${userId}`, JSON.stringify(checked));
   };
 
   const handleChangePassword = async () => {
@@ -325,35 +344,72 @@ export default function Admin() {
                   <tr>
                     {activeTab === 'users' && (
                       <>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Company</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Level</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">2FA</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Name
+                        </th>
+                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Email
+                        </th>
+                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Company
+                        </th>
+                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Level
+                        </th>
+                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          2FA
+                        </th>
+                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Read Only
+                        </th>
+                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Actions
+                        </th>
                       </>
                     )}
                     {activeTab === 'notes' && (
                       <>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Control</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Content</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Created</th>
+                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Control
+                        </th>
+                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Content
+                        </th>
+                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Created
+                        </th>
                       </>
                     )}
                     {activeTab === 'deadlines' && (
                       <>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Control</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Due Date</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Priority</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Control
+                        </th>
+                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Due Date
+                        </th>
+                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Priority
+                        </th>
+                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Status
+                        </th>
                       </>
                     )}
                     {activeTab === 'pois' && (
                       <>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Control</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Content</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Created</th>
+                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Control
+                        </th>
+                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Type
+                        </th>
+                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Content
+                        </th>
+                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Created
+                        </th>
                       </>
                     )}
                   </tr>
@@ -381,6 +437,17 @@ export default function Admin() {
                             )}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="flex items-center">
+                              <input
+                                type="checkbox"
+                                checked={readOnlyUsers[item.id] || false}
+                                onChange={(e) => handleReadOnlyChange(item.id, e.target.checked)}
+                                className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                              />
+                              <Lock className={`ml-2 h-4 w-4 ${readOnlyUsers[item.id] ? 'text-indigo-600' : 'text-gray-400'}`} />
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
                             <div className="flex space-x-2">
                               <button
                                 onClick={() => handleImpersonateUser(item)}
@@ -389,14 +456,6 @@ export default function Admin() {
                               >
                                 <UserCheck className="h-4 w-4 mr-1" />
                                 View As
-                              </button>
-                              <button
-                                onClick={() => handleImpersonateUser(item, true)}
-                                className="inline-flex items-center px-3 py-1.5 border border-gray-300 text-xs font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
-                                title="View as read-only"
-                              >
-                                <Eye className="h-4 w-4 mr-1" />
-                                Read Only
                               </button>
                               <button
                                 onClick={() => {

@@ -1,12 +1,16 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { FileSpreadsheet, File as FilePdf, FileText, ChevronLeft, Download, Filter, Star } from 'lucide-react';
+import { FileSpreadsheet, File as FilePdf, FileText, ChevronLeft, Download, Filter, Star, PieChart } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { functions } from '../data/functions';
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
 import jsPDF from 'jspdf';
 import type { POI, Function, Category, Subcategory, Requirement } from '../types';
+import { Pie } from 'react-chartjs-2';
+import 'chart.js/auto';
+import { PDFDownloadLink, Document, Page, Text, View, StyleSheet } from '@react-pdf/renderer';
+import { CSVLink } from 'react-csv';
 
 type StatusFilter = 'all' | 'pending' | 'in-progress' | 'completed';
 
@@ -32,7 +36,7 @@ function getRequirementsForLevel(requirements: Requirement[], cyfunLevel?: strin
       );
     case 'important':
       return requirements.filter(req => 
-        ['basic', 'important'].includes(req.cyfunLevel)
+        req.cyfunLevel === 'basic' || req.cyfunLevel === 'important'
       );
     case 'basic':
     default:
@@ -42,12 +46,55 @@ function getRequirementsForLevel(requirements: Requirement[], cyfunLevel?: strin
   }
 }
 
+// Fonctions de comptage
+function countRequirements(func: Function, cyfunLevel?: string): number {
+  let count = 0;
+  func.categories.forEach(cat => {
+    cat.subcategories.forEach(subcat => {
+      count += getRequirementsForLevel(subcat.requirements, cyfunLevel).length;
+    });
+  });
+  return count;
+}
+
+function countCompletedRequirements(func: Function, controlStatuses: Record<string, { userStatuses: Record<string, string> }>, userId?: string, cyfunLevel?: string): number {
+  let completed = 0;
+  func.categories.forEach(cat => {
+    cat.subcategories.forEach(subcat => {
+      const requirements = getRequirementsForLevel(subcat.requirements, cyfunLevel);
+      requirements.forEach(req => {
+        const status = getStatusForRequirementFunction(req.id, controlStatuses, userId);
+        if (status === 'completed') {
+          completed++;
+        }
+      });
+    });
+  });
+  return completed;
+}
+
+function getStatusForRequirementFunction(reqId: string, controlStatuses: Record<string, { userStatuses: Record<string, string> }>, userId?: string): string {
+  if (!userId) return 'pending';
+  
+  // Check specific requirement status first
+  const reqStatus = controlStatuses[reqId]?.userStatuses[userId];
+  if (reqStatus) return reqStatus;
+  
+  // If no specific status, check parent control status
+  const parentControlId = reqId.split('.').slice(0, -1).join('.');
+  return controlStatuses[parentControlId]?.userStatuses[userId] || 'pending';
+}
+
 function Reports() {
   const { user } = useAuth();
   const [controlStatuses, setControlStatuses] = useState<Record<string, { userStatuses: Record<string, string> }>>({});
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [loading, setLoading] = useState(true);
   const [pois, setPois] = useState<Record<string, POI>>({});
+  const [showChart, setShowChart] = useState(false);
+  const [currentLevel, setCurrentLevel] = useState(user?.cyfunLevel || 'basic');
+  const [reportData, setReportData] = useState<any[]>([]);
+  const [csvData, setCsvData] = useState<any[]>([]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -82,6 +129,18 @@ function Reports() {
     }
   }, [user]);
 
+  useEffect(() => {
+    if (user?.cyfunLevel) {
+      setCurrentLevel(user.cyfunLevel);
+    }
+  }, [user]);
+
+  useEffect(() => {
+    if (user && Object.keys(controlStatuses).length > 0) {
+      generateReportData();
+    }
+  }, [user, controlStatuses, currentLevel]);
+
   const getStatusForRequirement = (reqId: string, userId?: string): string => {
     if (!userId) return 'pending';
     
@@ -102,7 +161,7 @@ function Reports() {
     functions.forEach(func => {
       func.categories.forEach(cat => {
         cat.subcategories.forEach(subcat => {
-          const levelRequirements = getRequirementsForLevel(subcat.requirements, user.cyfunLevel);
+          const levelRequirements = getRequirementsForLevel(subcat.requirements, currentLevel);
           allRequirements.push(...levelRequirements);
         });
       });
@@ -241,6 +300,108 @@ function Reports() {
     saveAs(blob, `cyfun-controls-report-${new Date().toISOString().split('T')[0]}.csv`);
   };
 
+  const generateReportData = () => {
+    const data = functions.map(func => {
+      const categories = func.categories.map(cat => {
+        const subcategories = cat.subcategories.map(subcat => {
+          const requirements = getRequirementsForLevel(subcat.requirements, currentLevel).map(req => {
+            const status = getStatusForRequirement(req.id, user?.id);
+            return {
+              ...req,
+              status
+            };
+          });
+          
+          return {
+            ...subcat,
+            requirements
+          };
+        }).filter(subcat => subcat.requirements.length > 0);
+        
+        return {
+          ...cat,
+          subcategories
+        };
+      }).filter(cat => cat.subcategories.length > 0);
+      
+      const totalReqs = countRequirements(func, currentLevel);
+      const completedReqs = countCompletedRequirements(func, controlStatuses, user?.id, currentLevel);
+      const completion = totalReqs > 0 ? Math.round((completedReqs / totalReqs) * 100) : 0;
+      
+      return {
+        ...func,
+        categories,
+        completion,
+        totalReqs,
+        completedReqs
+      };
+    }).filter(func => func.categories.length > 0);
+    
+    setReportData(data);
+    
+    // Generate CSV data
+    const csv: any[] = [];
+    data.forEach(func => {
+      func.categories.forEach(cat => {
+        cat.subcategories.forEach(subcat => {
+          subcat.requirements.forEach(req => {
+            csv.push({
+              Function: func.name,
+              'Function ID': func.id,
+              Category: cat.name,
+              'Category ID': cat.id,
+              Subcategory: subcat.title,
+              'Subcategory ID': subcat.id,
+              Requirement: req.title,
+              'Requirement ID': req.id,
+              Status: req.status,
+              'CyFun Level': req.cyfunLevel
+            });
+          });
+        });
+      });
+    });
+    
+    setCsvData(csv);
+  };
+
+  const chartData = {
+    labels: functions.map(f => f.name),
+    datasets: [
+      {
+        label: 'Completion Percentage',
+        data: reportData.map(f => f.completion),
+        backgroundColor: [
+          '#4BC0C0', '#FF6384', '#FFCE56', '#36A2EB', '#9966FF', '#FF9F40'
+        ]
+      }
+    ]
+  };
+
+  const getStatusClass = (status: string) => {
+    switch (status) {
+      case 'completed':
+        return 'bg-green-100 text-green-800';
+      case 'in-progress':
+        return 'bg-yellow-100 text-yellow-800';
+      case 'pending':
+      default:
+        return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const getStatusText = (status: string) => {
+    switch (status) {
+      case 'completed':
+        return 'Completed';
+      case 'in-progress':
+        return 'In Progress';
+      case 'pending':
+      default:
+        return 'Pending';
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -249,25 +410,46 @@ function Reports() {
     );
   }
 
-  // Get all requirements for stats calculation
-  const allRequirements: Requirement[] = [];
-  functions.forEach(func => {
-    func.categories.forEach(cat => {
-      cat.subcategories.forEach(subcat => {
-        const levelRequirements = getRequirementsForLevel(subcat.requirements, user?.cyfunLevel);
-        allRequirements.push(...levelRequirements);
-      });
-    });
-  });
-
   const stats = {
-    total: allRequirements.length,
-    completed: allRequirements.filter(req => getStatusForRequirement(req.id, user?.id) === 'completed').length,
-    inProgress: allRequirements.filter(req => getStatusForRequirement(req.id, user?.id) === 'in-progress').length,
-    pending: allRequirements.filter(req => {
-      const status = getStatusForRequirement(req.id, user?.id);
-      return !status || status === 'pending';
-    }).length,
+    // Total des requirements pour le niveau actuel
+    total: reportData.reduce((acc, func) => acc + func.totalReqs, 0),
+    
+    // Nombre de requirements complétés
+    completed: reportData.reduce((acc, func) => acc + func.completedReqs, 0),
+    
+    // Nombre de requirements en cours
+    inProgress: (() => {
+      let count = 0;
+      reportData.forEach(func => {
+        func.categories.forEach(cat => {
+          cat.subcategories.forEach(subcat => {
+            subcat.requirements.forEach(req => {
+              if (req.status === 'in-progress') {
+                count++;
+              }
+            });
+          });
+        });
+      });
+      return count;
+    })(),
+    
+    // Nombre de requirements en attente
+    pending: (() => {
+      let count = 0;
+      reportData.forEach(func => {
+        func.categories.forEach(cat => {
+          cat.subcategories.forEach(subcat => {
+            subcat.requirements.forEach(req => {
+              if (req.status === 'pending') {
+                count++;
+              }
+            });
+          });
+        });
+      });
+      return count;
+    })()
   };
 
   const filteredControls = getFilteredControls();
@@ -360,19 +542,19 @@ function Reports() {
           <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
             <div className="grid grid-cols-4 gap-4">
               <div className="bg-white p-4 rounded-lg shadow-sm">
-                <div className="text-sm font-medium text-gray-500">Total Controls</div>
+                <div className="text-sm font-medium text-gray-500">Total Requirements</div>
                 <div className="mt-1 text-2xl font-semibold text-gray-900">{stats.total}</div>
               </div>
               <div className="bg-white p-4 rounded-lg shadow-sm">
-                <div className="text-sm font-medium text-gray-500">Completed</div>
+                <div className="text-sm font-medium text-gray-500">Completed Requirements</div>
                 <div className="mt-1 text-2xl font-semibold text-green-600">{stats.completed}</div>
               </div>
               <div className="bg-white p-4 rounded-lg shadow-sm">
-                <div className="text-sm font-medium text-gray-500">In Progress</div>
+                <div className="text-sm font-medium text-gray-500">Requirements In Progress</div>
                 <div className="mt-1 text-2xl font-semibold text-yellow-600">{stats.inProgress}</div>
               </div>
               <div className="bg-white p-4 rounded-lg shadow-sm">
-                <div className="text-sm font-medium text-gray-500">Pending</div>
+                <div className="text-sm font-medium text-gray-500">Pending Requirements</div>
                 <div className="mt-1 text-2xl font-semibold text-red-600">{stats.pending}</div>
               </div>
             </div>
@@ -454,6 +636,48 @@ function Reports() {
                 </tbody>
               </table>
             </div>
+          </div>
+        </div>
+
+        <div className="mt-8 bg-white p-6 rounded-lg shadow">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-semibold">CyFun Requirements</h2>
+            <select 
+              value={currentLevel} 
+              onChange={(e) => setCurrentLevel(e.target.value)}
+              className="rounded-md border-gray-300 text-sm"
+            >
+              <option value="basic">Basic</option>
+              <option value="important">Important</option>
+              <option value="essential">Essential</option>
+            </select>
+          </div>
+
+          {showChart && reportData.length > 0 && (
+            <div className="mb-8">
+              <h3 className="text-lg font-medium mb-4">Completion by Function</h3>
+              <div className="max-w-md mx-auto">
+                <Pie data={chartData} />
+              </div>
+            </div>
+          )}
+
+          <div className="space-y-8">
+            {reportData.map(func => (
+              <div key={func.id} className="bg-gray-50 p-4 rounded-md">
+                <div className="flex justify-between items-center">
+                  <div>
+                    <h4 className="text-md font-medium text-gray-900 mb-2">{func.name} ({func.id})</h4>
+                    <p className="text-sm text-gray-500">
+                      {func.completedReqs} of {func.totalReqs} requirements completed ({func.completion}%)
+                    </p>
+                  </div>
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100">
+                    <span className="text-blue-800 font-medium">{func.completion}%</span>
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </div>

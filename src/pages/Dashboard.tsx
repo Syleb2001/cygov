@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Routes, Route, Link } from 'react-router-dom';
 import { 
   BarChart3, FileCheck, AlertCircle, ChevronDown, ChevronUp, 
   Info, UserCircle, Filter, Calendar, Clock, PieChart, Shield, 
@@ -176,6 +176,7 @@ export default function Dashboard() {
   const [controlStatuses, setControlStatuses] = useState<Record<string, { userStatuses: Record<string, string> }>>({});
   const [error, setError] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
+  const [showKeyMeasuresOnly, setShowKeyMeasuresOnly] = useState(false);
   const [showDeadlineModal, setShowDeadlineModal] = useState(false);
   const [selectedRequirementForDeadline, setSelectedRequirementForDeadline] = useState<string | null>(null);
   const [newDeadline, setNewDeadline] = useState({
@@ -412,10 +413,12 @@ export default function Dashboard() {
         cat.subcategories.forEach(subcat => {
           const requirements = getRequirementsForLevel(subcat.requirements, user?.cyfunLevel);
           requirements.forEach(req => {
-            total++;
-            const status = getStatusForRequirement(req.id, controlStatuses, user?.id);
-            if (status === 'completed') completed++;
-            else if (status === 'in-progress') inProgress++;
+            if (!showKeyMeasuresOnly || req.isKeyMeasure) {
+              total++;
+              const status = getStatusForRequirement(req.id, controlStatuses, user?.id);
+              if (status === 'completed') completed++;
+              else if (status === 'in-progress') inProgress++;
+            }
           });
         });
       });
@@ -444,11 +447,22 @@ export default function Dashboard() {
   };
 
   const filterRequirements = (requirements: Requirement[]): Requirement[] => {
-    if (statusFilter === 'all') return requirements;
-    return requirements.filter(req => {
-      const status = getStatusForRequirement(req.id, controlStatuses, user?.id);
-      return status === statusFilter;
-    });
+    let filtered = requirements;
+    
+    // Apply key measures filter first
+    if (showKeyMeasuresOnly) {
+      filtered = filtered.filter(req => req.isKeyMeasure);
+    }
+    
+    // Then apply status filter
+    if (statusFilter !== 'all') {
+      filtered = filtered.filter(req => {
+        const status = getStatusForRequirement(req.id, controlStatuses, user?.id);
+        return status === statusFilter;
+      });
+    }
+    
+    return filtered;
   };
 
   return (
@@ -612,49 +626,65 @@ export default function Dashboard() {
                 {showChart ? 'Hide Chart' : 'Show Chart'}
               </button>
             </div>
-            <div className="flex items-center space-x-2">
-              <Filter className="h-5 w-5 text-gray-400" />
-              <div className="flex rounded-md shadow-sm">
-                <button
-                  onClick={() => setStatusFilter('all')}
-                  className={`px-4 py-2 text-sm font-medium rounded-l-md border ${
-                    statusFilter === 'all'
-                      ? 'bg-indigo-50 border-indigo-200 text-indigo-700'
-                      : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
-                  }`}
-                >
-                  All
-                </button>
-                <button
-                  onClick={() => setStatusFilter('pending')}
-                  className={`px-4 py-2 text-sm font-medium border-t border-b ${
-                    statusFilter === 'pending'
-                      ? 'bg-red-50 border-red-200 text-red-700'
-                      : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
-                  }`}
-                >
-                  Pending
-                </button>
-                <button
-                  onClick={() => setStatusFilter('in-progress')}
-                  className={`px-4 py-2 text-sm font-medium border-t border-b ${
-                    statusFilter === 'in-progress'
-                      ? 'bg-yellow-50 border-yellow-200 text-yellow-700'
-                      : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
-                  }`}
-                >
-                  In Progress
-                </button>
-                <button
-                  onClick={() => setStatusFilter('completed')}
-                  className={`px-4 py-2 text-sm font-medium rounded-r-md border ${
-                    statusFilter === 'completed'
-                      ? 'bg-green-50 border-green-200 text-green-700'
-                      : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
-                  }`}
-                >
-                  Completed
-                </button>
+            <div className="flex items-center space-x-4">
+              {/* Key Measures Filter */}
+              <button
+                onClick={() => setShowKeyMeasuresOnly(!showKeyMeasuresOnly)}
+                className={`inline-flex items-center px-3 py-1.5 border rounded-md text-sm font-medium ${
+                  showKeyMeasuresOnly
+                    ? 'bg-blue-50 border-blue-200 text-blue-700'
+                    : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
+                }`}
+              >
+                <Star className="h-4 w-4 mr-2" />
+                Key Measures Only
+              </button>
+              
+              {/* Status Filter */}
+              <div className="flex items-center space-x-2">
+                <Filter className="h-5 w-5 text-gray-400" />
+                <div className="flex rounded-md shadow-sm">
+                  <button
+                    onClick={() => setStatusFilter('all')}
+                    className={`px-4 py-2 text-sm font-medium rounded-l-md border ${
+                      statusFilter === 'all'
+                        ? 'bg-indigo-50 border-indigo-200 text-indigo-700'
+                        : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
+                    }`}
+                  >
+                    All
+                  </button>
+                  <button
+                    onClick={() => setStatusFilter('pending')}
+                    className={`px-4 py-2 text-sm font-medium border-t border-b ${
+                      statusFilter === 'pending'
+                        ? 'bg-red-50 border-red-200 text-red-700'
+                        : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
+                    }`}
+                  >
+                    Pending
+                  </button>
+                  <button
+                    onClick={() => setStatusFilter('in-progress')}
+                    className={`px-4 py-2 text-sm font-medium border-t border-b ${
+                      statusFilter === 'in-progress'
+                        ? 'bg-yellow-50 border-yellow-200 text-yellow-700'
+                        : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
+                    }`}
+                  >
+                    In Progress
+                  </button>
+                  <button
+                    onClick={() => setStatusFilter('completed')}
+                    className={`px-4 py-2 text-sm font-medium rounded-r-md border ${
+                      statusFilter === 'completed'
+                        ? 'bg-green-50 border-green-200 text-green-700'
+                        : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
+                    }`}
+                  >
+                    Completed
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -679,7 +709,7 @@ export default function Dashboard() {
                 });
               });
 
-              if (!hasFilteredRequirements && statusFilter !== 'all') return null;
+              if (!hasFilteredRequirements) return null;
 
               return (
                 <div key={func.id} className="tree-parent">
@@ -711,7 +741,7 @@ export default function Dashboard() {
                           }
                         });
 
-                        if (!categoryHasFilteredRequirements && statusFilter !== 'all') return null;
+                        if (!categoryHasFilteredRequirements) return null;
 
                         return (
                           <div key={cat.id} className={`tree-line ${catIndex === func.categories.length - 1 ? 'last-child' : ''}`}>
@@ -738,7 +768,7 @@ export default function Dashboard() {
                                   const requirements = getRequirementsForLevel(subcat.requirements, user?.cyfunLevel);
                                   const filteredRequirements = filterRequirements(requirements);
 
-                                  if (filteredRequirements.length === 0 && statusFilter !== 'all') return null;
+                                  if (filteredRequirements.length === 0) return null;
 
                                   return (
                                     <div key={subcat.id} className={`tree-line ${subcatIndex === cat.subcategories.length - 1 ? 'last-child' : ''}`}>
@@ -1124,5 +1154,3 @@ export default function Dashboard() {
     </div>
   );
 }
-
-export default Dashboard

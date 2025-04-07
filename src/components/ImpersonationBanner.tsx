@@ -3,9 +3,12 @@ import { useAuth } from '../context/AuthContext';
 import { UserX } from 'lucide-react';
 
 export default function ImpersonationBanner() {
-  const { impersonatedUser, stopImpersonating, isReadOnly } = useAuth();
+  const { impersonatedUser, stopImpersonating, isReadOnly, realUser } = useAuth();
 
   if (!impersonatedUser) return null;
+
+  // Only show read-only badge if not an admin
+  const showReadOnlyBadge = isReadOnly && !realUser?.isAdmin;
 
   return (
     <div className="bg-indigo-600 text-white px-4 py-2">
@@ -14,7 +17,7 @@ export default function ImpersonationBanner() {
           <span className="font-medium">
             Viewing as: {impersonatedUser.firstName} {impersonatedUser.lastName}
           </span>
-          {isReadOnly && (
+          {showReadOnlyBadge && (
             <span className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-800">
               Read Only
             </span>

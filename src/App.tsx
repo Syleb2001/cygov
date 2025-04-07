@@ -8,6 +8,7 @@ import Notes from './pages/Notes';
 import Calendar from './pages/Calendar';
 import Compliance from './pages/Compliance';
 import Admin from './pages/Admin';
+import SetupPassword from './pages/SetupPassword';
 import { AuthProvider } from './context/AuthContext';
 import { NotificationsProvider } from './context/NotificationsContext';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -20,6 +21,7 @@ function App() {
         <ImpersonationBanner />
         <Routes>
           <Route path="/auth" element={<Auth />} />
+          <Route path="/setup-password" element={<SetupPassword />} />
           <Route
             path="/"
             element={
