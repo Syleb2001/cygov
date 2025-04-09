@@ -194,6 +194,10 @@ export default function Dashboard() {
   });
   const [showPoiViewModal, setShowPoiViewModal] = useState(false);
   const [selectedPoiForView, setSelectedPoiForView] = useState<POI | null>(null);
+  const [maturityScores, setMaturityScores] = useState<Record<string, number>>({});
+  const [showMaturityModal, setShowMaturityModal] = useState(false);
+  const [selectedRequirementForMaturity, setSelectedRequirementForMaturity] = useState<string | null>(null);
+  const [selectedMaturityLevel, setSelectedMaturityLevel] = useState<number>(1);
 
   useEffect(() => {
     const fetchControlStatuses = async () => {
@@ -238,6 +242,27 @@ export default function Dashboard() {
     if (user) {
       fetchPois();
     }
+  }, [user]);
+
+  useEffect(() => {
+    const fetchMaturityScores = async () => {
+      if (!user?.id) return;
+      
+      try {
+        const response = await fetch(`/api/maturity?userId=${user.id}`);
+        if (!response.ok) {
+          console.error('Failed to fetch maturity scores');
+          return;
+        }
+        
+        const data = await response.json();
+        setMaturityScores(data.scores || {});
+      } catch (error) {
+        console.error('Error fetching maturity scores:', error);
+      }
+    };
+
+    fetchMaturityScores();
   }, [user]);
 
   const handleStatusChange = async (requirementId: string, newStatus: string) => {
@@ -463,6 +488,51 @@ export default function Dashboard() {
     }
     
     return filtered;
+  };
+
+  const updateMaturityLevel = async (requirementId: string, level: number) => {
+    if (isReadOnly) {
+      setError('Cannot update maturity level in read-only mode');
+      return;
+    }
+    
+    if (!user?.id) return;
+    
+    try {
+      const response = await fetch('/api/maturity', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          requirementId, 
+          level,
+          userId: user.id 
+        })
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to update maturity level');
+      }
+      
+      // Mettre à jour localement
+      setMaturityScores(prev => ({
+        ...prev,
+        [requirementId]: level
+      }));
+      
+      addNotification({
+        type: 'status',
+        title: 'Maturity Level Updated',
+        message: `Maturity level for ${requirementId} has been updated to ${level}`,
+        controlId: requirementId
+      });
+      
+      // Fermer le modal
+      setShowMaturityModal(false);
+      setSelectedRequirementForMaturity(null);
+    } catch (error) {
+      console.error('Error updating maturity level:', error);
+      setError(error instanceof Error ? error.message : 'Failed to update maturity level');
+    }
   };
 
   return (
@@ -849,6 +919,32 @@ export default function Dashboard() {
                                                         <Clock className="h-4 w-4" />
                                                       </button>
                                                     )}
+                                                    {/* Bouton Maturity */}
+                                                    <button
+                                                      onClick={() => {
+                                                        setSelectedRequirementForMaturity(req.id);
+                                                        setSelectedMaturityLevel(maturityScores[req.id] || 1);
+                                                        setShowMaturityModal(true);
+                                                      }}
+                                                      className="p-1 text-gray-600 hover:text-gray-900 rounded-full hover:bg-gray-100"
+                                                      title="Set maturity level"
+                                                      disabled={isReadOnly}
+                                                    >
+                                                      <div className="relative">
+                                                        <BarChart3 className="h-4 w-4" />
+                                                        {maturityScores[req.id] && (
+                                                          <div 
+                                                            className={`absolute -top-1 -right-1 w-2 h-2 rounded-full ${
+                                                              maturityScores[req.id] === 1 
+                                                                ? 'bg-red-500' 
+                                                                : maturityScores[req.id] === 2 
+                                                                  ? 'bg-yellow-500' 
+                                                                  : 'bg-green-500'
+                                                            }`} 
+                                                          />
+                                                        )}
+                                                      </div>
+                                                    </button>
                                                     <select
                                                       value={getStatusForRequirement(req.id, controlStatuses, user?.id)}
                                                       onChange={(e) => handleStatusChange(req.id, e.target.value)}
@@ -1146,6 +1242,71 @@ export default function Dashboard() {
                     </li>
                   ))}
                 </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Maturity Modal */}
+      {showMaturityModal && (
+        <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg max-w-md w-full p-6">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-medium text-gray-900">Set Maturity Level</h3>
+              <button
+                onClick={() => setShowMaturityModal(false)}
+                className="text-gray-400 hover:text-gray-500"
+              >
+                <X className="h-6 w-6" />
+              </button>
+            </div>
+            <div className="space-y-4">
+              <p className="text-sm text-gray-600">Select maturity level for <span className="font-medium">{selectedRequirementForMaturity}</span></p>
+              <div className="flex justify-center space-x-2">
+                {[1, 2, 3, 4, 5].map(level => (
+                  <button
+                    key={`maturity-${level}`}
+                    onClick={() => setSelectedMaturityLevel(level)}
+                    className={`w-10 h-10 flex items-center justify-center text-sm rounded-full transition-colors ${
+                      selectedMaturityLevel === level 
+                        ? level === 1 
+                            ? 'bg-red-500 text-white' 
+                            : level === 2 
+                                ? 'bg-yellow-500 text-white' 
+                                : 'bg-green-500 text-white'
+                        : level === 1 
+                            ? 'bg-gray-200 text-gray-600 hover:bg-red-300' 
+                            : level === 2 
+                                ? 'bg-gray-200 text-gray-600 hover:bg-yellow-300' 
+                                : 'bg-gray-200 text-gray-600 hover:bg-green-300'
+                    }`}
+                  >
+                    {level}
+                  </button>
+                ))}
+              </div>
+              <div className="text-sm text-gray-600 mt-2">
+                <p className="font-medium">Maturity Levels:</p>
+                <p>1: Initial - No process documentation</p>
+                <p>2: Repeatable - Documentation exists but not reviewed</p>
+                <p>3: Defined - Approved documentation with few exceptions</p>
+                <p>4: Managed - Well-defined processes with minimal exceptions</p>
+                <p>5: Optimizing - Continuously improved processes</p>
+              </div>
+              <div className="flex justify-end space-x-3 mt-4">
+                <button
+                  onClick={() => setShowMaturityModal(false)}
+                  className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => selectedRequirementForMaturity && updateMaturityLevel(selectedRequirementForMaturity, selectedMaturityLevel)}
+                  className="px-4 py-2 bg-blue-600 border border-transparent rounded-md text-sm font-medium text-white hover:bg-blue-700"
+                >
+                  Save
+                </button>
               </div>
             </div>
           </div>

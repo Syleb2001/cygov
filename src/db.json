@@ -1,58 +1,6 @@
 {
   "users": [
     {
-      "companyName": "TEST",
-      "firstName": "Sylvain",
-      "lastName": "Lebailly",
-      "email": "sylvain.lebailly@anderson.be",
-      "password": "$2a$10$RJNcYxGN9jX0i/qP3RjtB.Pr.zlBqSh2yKP.ziRQEIttCXZ687wEq",
-      "cyfunLevel": "important",
-      "id": "ed07ad25-690b-492f-b63f-e9a905217ec3",
-      "twoFactorSecret": "PJHHGY3YNUXDKQZIKB3UQ4TXEZRFMQB2LBYFE3JDIVVVEQCVGBSQ",
-      "twoFactorEnabled": false
-    },
-    {
-      "companyName": "CEPS",
-      "firstName": "John",
-      "lastName": "Doe",
-      "email": "admin@ceps.com",
-      "password": "$2a$10$eH0bITwqxwrCAV4u8NoG6eSROifoBhpDbv/FEeGmSmHGOSLUaaPAu",
-      "cyfunLevel": "basic",
-      "id": "f8d68f83-bf3a-4630-bcef-e18ebc5b78e7"
-    },
-    {
-      "companyName": "azerty",
-      "firstName": "kgoe",
-      "lastName": "fndl",
-      "email": "syl200126@gmail.com",
-      "password": "$2a$10$lGSSPJ/9ZO9lKAuCQ7jh3OT8taT5otKOO6qSpDvaCW4Z/a/hoX98.",
-      "cyfunLevel": "basic",
-      "id": "3029d179-d15c-4fdf-8438-550ed2c11a0c"
-    },
-    {
-      "companyName": "ANDERSON",
-      "firstName": "Sylvain",
-      "lastName": "Lebailly",
-      "email": "sylvain@anderson.be",
-      "password": "$2a$10$CVoXmN6o1iDancGXtp.h/uMMFFIkwbPb2cjV.45BItTLAzn21Me.G",
-      "cyfunLevel": "basic",
-      "id": "5bb28030-f154-4906-8841-9717ee152ef1",
-      "twoFactorSecret": "OBYEOSRXGVVTEOZFLZZXMUCBLUZTUI3NJZ2TAUTDOFSGQKJ2N54A",
-      "twoFactorEnabled": false
-    },
-    {
-      "companyName": "Bitopia",
-      "firstName": "Sylvain",
-      "lastName": "Lebailly",
-      "email": "sylvain@bitopia.ae",
-      "password": "$2a$10$5IybAOw0rRn2tYMABIebaOyujj07nv9ULit6pJYCTKIXuj62/Cn.2",
-      "cyfunLevel": "basic",
-      "id": "9b25825e-0476-44ac-9623-9ee9624751a6",
-      "isAdmin": true,
-      "twoFactorSecret": "NR5XOSD3M43UAQZJJJPFIKR6OJRUIR2ALBFC4NBGLZIE2V3RNMZQ",
-      "twoFactorEnabled": false
-    },
-    {
       "companyName": "Vanity",
       "firstName": "James",
       "lastName": "Anderson",
@@ -75,64 +23,13 @@
       "isActive": false
     },
     {
-      "firstName": "kgoe",
-      "lastName": "fndl",
-      "email": "syl200126@bitopia.ae",
-      "cyfunLevel": "basic",
-      "companyName": "Bitopia",
-      "id": "94912723-476b-43d4-873c-56c79741bc7b",
-      "twoFactorEnabled": false,
-      "isActive": false
-    },
-    {
-      "firstName": "Johnny",
-      "lastName": "Well",
-      "email": "test123@bitopia.ae",
-      "cyfunLevel": "basic",
-      "companyName": "Bitopia",
-      "id": "be37e71f-69ab-4174-9ed5-fed793638cc7",
-      "twoFactorEnabled": false,
-      "isActive": false
-    },
-    {
-      "firstName": "Johny",
-      "lastName": "Well",
-      "email": "test12@bitopia.ae",
-      "cyfunLevel": "basic",
-      "companyName": "Bitopia",
-      "id": "dd7c6b05-56a3-4327-88de-ab715fd99e8d",
-      "twoFactorEnabled": false,
-      "isActive": false
-    },
-    {
-      "firstName": "okk",
-      "lastName": "olj",
-      "email": "okk@bitopia.ae",
-      "cyfunLevel": "basic",
-      "companyName": "Bitopia",
-      "id": "dd71ed06-de5f-4340-8cc2-ccf848ae8746",
-      "twoFactorEnabled": false,
-      "isActive": false
-    },
-    {
-      "firstName": "kgoe",
-      "lastName": "fdfdf",
-      "email": "syl2001226@gmail.com",
-      "cyfunLevel": "basic",
-      "companyName": "Bitopia",
-      "id": "19aee477-87bc-4664-b275-31e5eef2658f",
-      "twoFactorEnabled": false,
-      "isActive": false
-    },
-    {
+      "companyName": "Anderson SRL",
       "firstName": "Maxime",
-      "lastName": "Troufion",
-      "email": "maxime@anderson.be",
+      "lastName": "Joyeux",
+      "email": "maxime.joyeux@anderson.be",
+      "password": "$2a$10$NeiKGXNbYRBqHMEIZbtMiei6P0v32Vpjr7fkMdAodn4jqUzlTeEji",
       "cyfunLevel": "basic",
-      "companyName": "Bitopia",
-      "id": "3f625249-896d-488d-9ed6-d9e092e31bb6",
-      "twoFactorEnabled": false,
-      "isActive": false
+      "id": "4664dc5b-cf0c-4a75-8ea0-9a13772abe11"
     }
   ],
   "controls": {
@@ -385,7 +282,8 @@
       "userStatuses": {
         "02ef88a4-80a7-43d5-bd6d-d8117aed7077": "completed",
         "ed07ad25-690b-492f-b63f-e9a905217ec3": "completed",
-        "9b25825e-0476-44ac-9623-9ee9624751a6": "completed"
+        "9b25825e-0476-44ac-9623-9ee9624751a6": "completed",
+        "4664dc5b-cf0c-4a75-8ea0-9a13772abe11": "completed"
       }
     },
     "PR.IP-4.1": {
@@ -531,7 +429,7 @@
     },
     "DE.CM-3.1": {
       "userStatuses": {
-        "9b25825e-0476-44ac-9623-9ee9624751a6": "in-progress"
+        "9b25825e-0476-44ac-9623-9ee9624751a6": "completed"
       }
     },
     "ID.AM-1.3": {
@@ -547,6 +445,11 @@
       "userStatuses": {}
     },
     "DE.CM-1.1": {
+      "userStatuses": {
+        "9b25825e-0476-44ac-9623-9ee9624751a6": "completed"
+      }
+    },
+    "DE.CM-4.1": {
       "userStatuses": {
         "9b25825e-0476-44ac-9623-9ee9624751a6": "completed"
       }
