@@ -6,7 +6,7 @@
       "lastName": "Lebailly",
       "email": "sylvain.lebailly@anderson.be",
       "password": "$2a$10$RJNcYxGN9jX0i/qP3RjtB.Pr.zlBqSh2yKP.ziRQEIttCXZ687wEq",
-      "cyfunLevel": "basic",
+      "cyfunLevel": "important",
       "id": "ed07ad25-690b-492f-b63f-e9a905217ec3",
       "twoFactorSecret": "PJHHGY3YNUXDKQZIKB3UQ4TXEZRFMQB2LBYFE3JDIVVVEQCVGBSQ",
       "twoFactorEnabled": false
@@ -49,7 +49,7 @@
       "cyfunLevel": "basic",
       "id": "9b25825e-0476-44ac-9623-9ee9624751a6",
       "isAdmin": true,
-      "twoFactorSecret": "PAZVE6ZEOUXWGMJGINEG433PFJLWKZ2AIIZV2VJDGZQXKMKSOR2A",
+      "twoFactorSecret": "NR5XOSD3M43UAQZJJJPFIKR6OJRUIR2ALBFC4NBGLZIE2V3RNMZQ",
       "twoFactorEnabled": false
     },
     {
@@ -111,6 +111,26 @@
       "cyfunLevel": "basic",
       "companyName": "Bitopia",
       "id": "dd71ed06-de5f-4340-8cc2-ccf848ae8746",
+      "twoFactorEnabled": false,
+      "isActive": false
+    },
+    {
+      "firstName": "kgoe",
+      "lastName": "fdfdf",
+      "email": "syl2001226@gmail.com",
+      "cyfunLevel": "basic",
+      "companyName": "Bitopia",
+      "id": "19aee477-87bc-4664-b275-31e5eef2658f",
+      "twoFactorEnabled": false,
+      "isActive": false
+    },
+    {
+      "firstName": "Maxime",
+      "lastName": "Troufion",
+      "email": "maxime@anderson.be",
+      "cyfunLevel": "basic",
+      "companyName": "Bitopia",
+      "id": "3f625249-896d-488d-9ed6-d9e092e31bb6",
       "twoFactorEnabled": false,
       "isActive": false
     }
@@ -337,7 +357,7 @@
         "26490a44-9edd-4e58-aab1-d58a31b91b17": "completed",
         "02ef88a4-80a7-43d5-bd6d-d8117aed7077": "completed",
         "9b25825e-0476-44ac-9623-9ee9624751a6": "completed",
-        "ed07ad25-690b-492f-b63f-e9a905217ec3": "pending"
+        "ed07ad25-690b-492f-b63f-e9a905217ec3": "completed"
       }
     },
     "ID.RA-1.1": {
@@ -346,11 +366,14 @@
       }
     },
     "ID.RA-5.1": {
-      "userStatuses": {}
+      "userStatuses": {
+        "9b25825e-0476-44ac-9623-9ee9624751a6": "completed"
+      }
     },
     "PR.AC-3.1": {
       "userStatuses": {
-        "02ef88a4-80a7-43d5-bd6d-d8117aed7077": "completed"
+        "02ef88a4-80a7-43d5-bd6d-d8117aed7077": "completed",
+        "9b25825e-0476-44ac-9623-9ee9624751a6": "completed"
       }
     },
     "ID.AM-2.1": {
@@ -387,7 +410,8 @@
     },
     "PR.AC-3.2": {
       "userStatuses": {
-        "02ef88a4-80a7-43d5-bd6d-d8117aed7077": "completed"
+        "02ef88a4-80a7-43d5-bd6d-d8117aed7077": "completed",
+        "9b25825e-0476-44ac-9623-9ee9624751a6": "completed"
       }
     },
     "PR.AC-4.4": {
@@ -420,7 +444,8 @@
       "userStatuses": {
         "26490a44-9edd-4e58-aab1-d58a31b91b17": "completed",
         "02ef88a4-80a7-43d5-bd6d-d8117aed7077": "completed",
-        "ed07ad25-690b-492f-b63f-e9a905217ec3": "completed"
+        "ed07ad25-690b-492f-b63f-e9a905217ec3": "completed",
+        "9b25825e-0476-44ac-9623-9ee9624751a6": "completed"
       }
     },
     "RC.RP-1.1": {
@@ -434,7 +459,9 @@
       }
     },
     "ID.AM-5.1": {
-      "userStatuses": {}
+      "userStatuses": {
+        "9b25825e-0476-44ac-9623-9ee9624751a6": "completed"
+      }
     },
     "PR.AC-2.1": {
       "userStatuses": {
@@ -455,7 +482,8 @@
     },
     "PR.AC-4.1": {
       "userStatuses": {
-        "02ef88a4-80a7-43d5-bd6d-d8117aed7077": "pending"
+        "02ef88a4-80a7-43d5-bd6d-d8117aed7077": "pending",
+        "9b25825e-0476-44ac-9623-9ee9624751a6": "completed"
       }
     },
     "PR.AC-5.2": {
@@ -494,7 +522,9 @@
       }
     },
     "RS.IM-1.1": {
-      "userStatuses": {}
+      "userStatuses": {
+        "9b25825e-0476-44ac-9623-9ee9624751a6": "completed"
+      }
     },
     "ID.GV-4.1": {
       "userStatuses": {}

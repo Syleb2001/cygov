@@ -22,7 +22,7 @@ export const functions: Function[] = [
                 description: "Maintain a current inventory of all physical devices within the organization",
                 cyfunLevel: "basic",
                 subcategoryId: "ID.AM-1",
-                isKeyMeasure: true,
+                isKeyMeasure: false,
                 guidance: [
                   "Create and maintain an inventory of all organizational assets",
                   "Include all devices that could connect to networks",

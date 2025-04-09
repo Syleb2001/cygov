@@ -8,6 +8,10 @@ import speakeasy from 'speakeasy';
 import type { User, Note, Deadline, POI } from './src/types';
 
 export default defineConfig({
+  server: {
+    host: '0.0.0.0',
+    port: 3000
+  },
   plugins: [
     react(),
     {
@@ -65,12 +69,23 @@ export default defineConfig({
         } => {
           try {
             if (!fs.existsSync(DB_PATH)) {
+              console.log('DB file does not exist, creating initial data');
               const initialData = { users: [], controls: {} };
-              fs.writeFileSync(DB_PATH, JSON.stringify(initialData, null, 2), 'utf-8');
+              try {
+                fs.writeFileSync(DB_PATH, JSON.stringify(initialData, null, 2), 'utf-8');
+              } catch (writeError) {
+                console.error('Error creating database file:', writeError);
+                // Retourner quand même les données initiales en cas d'erreur d'écriture
+              }
               return initialData;
             }
             const data = fs.readFileSync(DB_PATH, 'utf-8');
-            return JSON.parse(data);
+            try {
+              return JSON.parse(data);
+            } catch (parseError) {
+              console.error('Error parsing database JSON:', parseError);
+              return { users: [], controls: {} };
+            }
           } catch (error) {
             console.error('Error reading database:', error);
             return { users: [], controls: {} };
@@ -202,6 +217,79 @@ export default defineConfig({
           } catch (error) {
             console.error('Error writing to maturity database:', error);
             throw new Error('Failed to save maturity data');
+          }
+        };
+
+        const checkFilesAccess = () => {
+          const files = [
+            { path: DB_PATH, name: 'Database' },
+            { path: CHAT_PATH, name: 'Chat' },
+            { path: CALENDAR_PATH, name: 'Calendar' },
+            { path: POI_PATH, name: 'POI' },
+            { path: MATURITY_PATH, name: 'Maturity' },
+            { path: TEMP_TOKENS_PATH, name: 'Temp Tokens' }
+          ];
+          
+          const dir = path.dirname(DB_PATH);
+          
+          try {
+            // Vérifier si le répertoire existe
+            if (!fs.existsSync(dir)) {
+              console.log(`Creating directory: ${dir}`);
+              try {
+                fs.mkdirSync(dir, { recursive: true });
+              } catch (mkdirError) {
+                console.error(`Error creating directory ${dir}:`, mkdirError);
+              }
+            }
+            
+            // Vérifier l'accès à chaque fichier
+            files.forEach(file => {
+              if (!fs.existsSync(file.path)) {
+                console.log(`${file.name} file does not exist, it will be created when needed`);
+                return;
+              }
+              
+              try {
+                // Test de lecture
+                fs.accessSync(file.path, fs.constants.R_OK);
+                
+                // Test d'écriture
+                fs.accessSync(file.path, fs.constants.W_OK);
+                
+                console.log(`${file.name} file is accessible for read/write`);
+              } catch (accessError) {
+                console.error(`Access error with ${file.name} file:`, accessError);
+              }
+            });
+          } catch (error) {
+            console.error('Error checking files access:', error);
+          }
+        };
+        
+        // Vérifier l'accès aux fichiers au démarrage
+        checkFilesAccess();
+
+        // Fonction utilitaire pour envoyer des réponses JSON sécurisées
+        const sendJsonResponse = (res, statusCode, data) => {
+          try {
+            res.statusCode = statusCode || 200;
+            // S'assurer que la réponse est un JSON valide
+            const jsonResponse = JSON.stringify(data);
+            // Vérifier que la réponse n'est pas vide
+            if (!jsonResponse || jsonResponse === '{}' || jsonResponse === '[]') {
+              console.warn('Empty JSON response detected, sending fallback');
+              res.end(JSON.stringify({ warning: 'Empty response', data }));
+            } else {
+              res.end(jsonResponse);
+            }
+          } catch (error) {
+            console.error('Error sending JSON response:', error);
+            res.statusCode = 500;
+            res.end(JSON.stringify({ 
+              error: 'Failed to generate response',
+              message: error.message || 'Unknown error'
+            }));
           }
         };
 
@@ -996,7 +1084,23 @@ export default defineConfig({
 
               req.on('end', async () => {
                 try {
-                  const data = JSON.parse(body);
+                  // Vérifier que le body n'est pas vide
+                  if (!body) {
+                    res.statusCode = 400;
+                    res.end(JSON.stringify({ error: 'Empty request body' }));
+                    return;
+                  }
+
+                  // Vérifier que le body est un JSON valide
+                  let data;
+                  try {
+                    data = JSON.parse(body);
+                  } catch (parseError) {
+                    console.error('Invalid JSON in request body:', body);
+                    res.statusCode = 400;
+                    res.end(JSON.stringify({ error: 'Invalid JSON in request body' }));
+                    return;
+                  }
 
                   if (req.url === '/api/auth/register') {
                     const db = readDb();
@@ -1026,37 +1130,51 @@ export default defineConfig({
                   }
 
                   if (req.url === '/api/auth/login') {
-                    const db = readDb();
-                    const user = db.users.find(u => u.email === data.email);
+                    try {
+                      const db = readDb();
+                      // Vérifier que la base de données est chargée correctement
+                      if (!db || !Array.isArray(db.users)) {
+                        console.error('Database error - db structure:', db);
+                        res.statusCode = 500;
+                        res.end(JSON.stringify({ error: 'Database error' }));
+                        return;
+                      }
 
-                    if (!user) {
-                      res.statusCode = 401;
-                      res.end(JSON.stringify({ error: 'Invalid credentials' }));
-                      return;
+                      const user = db.users.find(u => u.email === data.email);
+
+                      if (!user) {
+                        res.statusCode = 401;
+                        res.end(JSON.stringify({ error: 'Invalid credentials' }));
+                        return;
+                      }
+
+                      const validPassword = await bcrypt.compare(data.password, user.password);
+                      if (!validPassword) {
+                        res.statusCode = 401;
+                        res.end(JSON.stringify({ error: 'Invalid credentials' }));
+                        return;
+                      }
+
+                      if (user.twoFactorEnabled) {
+                        const tempToken = uuidv4();
+                        const { password, twoFactorSecret, ...tempUser } = user;
+                        sendJsonResponse(res, 200, { 
+                          requiresTwoFactor: true,
+                          tempUser: { ...tempUser, tempToken }
+                        });
+                        return;
+                      }
+
+                      const { password, twoFactorSecret, ...userWithoutPassword } = user;
+                      sendJsonResponse(res, 200, { user: userWithoutPassword });
+                    } catch (loginError) {
+                      console.error('Error during login:', loginError);
+                      res.statusCode = 500;
+                      res.end(JSON.stringify({ error: 'Authentication server error' }));
                     }
-
-                    const validPassword = await bcrypt.compare(data.password, user.password);
-                    if (!validPassword) {
-                      res.statusCode = 401;
-                      res.end(JSON.stringify({ error: 'Invalid credentials' }));
-                      return;
-                    }
-
-                    if (user.twoFactorEnabled) {
-                      const tempToken = uuidv4();
-                      const { password, twoFactorSecret, ...tempUser } = user;
-                      res.end(JSON.stringify({ 
-                        requiresTwoFactor: true,
-                        tempUser: { ...tempUser, tempToken }
-                      }));
-                      return;
-                    }
-
-                    const { password, twoFactorSecret, ...userWithoutPassword } = user;
-                    res.end(JSON.stringify({ user: userWithoutPassword }));
                     return;
                   }
-
+                  
                   if (req.url === '/api/auth/verify-login-2fa') {
                     const db = readDb();
                     const user = db.users.find(u => u.email === data.email);
@@ -1080,7 +1198,7 @@ export default defineConfig({
                     }
 
                     const { password, twoFactorSecret, ...userWithoutPassword } = user;
-                    res.end(JSON.stringify({ user: userWithoutPassword }));
+                    sendJsonResponse(res, 200, { user: userWithoutPassword });
                     return;
                   }
 
