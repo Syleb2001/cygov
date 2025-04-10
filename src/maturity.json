@@ -75,15 +75,15 @@
     "0279094c-4110-4993-8fae-c9e115106a7b": {
       "scores": {
         "PR.AC-1.1": {
-          "documentation": 2,
-          "implementation": 2
+          "documentation": 1,
+          "implementation": 3
         },
         "ID.AM-1.1": {
           "documentation": 5,
           "implementation": 5
         },
         "ID.GV-1.1": {
-          "documentation": 5,
+          "documentation": 3,
           "implementation": 5
         },
         "RC.RP-1.1": {
@@ -91,7 +91,7 @@
           "implementation": 5
         },
         "ID.AM-3.1": {
-          "documentation": 2,
+          "documentation": 4,
           "implementation": 4
         },
         "ID.AM-2.1": {
@@ -99,8 +99,8 @@
           "implementation": 5
         },
         "ID.AM-5.1": {
-          "documentation": 2,
-          "implementation": 2
+          "documentation": 5,
+          "implementation": 5
         },
         "ID.GV-3.1": {
           "documentation": 5,
@@ -111,12 +111,12 @@
           "implementation": 5
         },
         "ID.RA-5.1": {
-          "documentation": 2,
-          "implementation": 3
-        },
-        "ID.RA-1.1": {
           "documentation": 5,
           "implementation": 5
+        },
+        "ID.RA-1.1": {
+          "documentation": 2,
+          "implementation": 4
         },
         "PR.AC-3.1": {
           "documentation": 5,
@@ -133,6 +133,22 @@
         "PR.AC-4.2": {
           "documentation": 5,
           "implementation": 5
+        },
+        "DE.CM-3.1": {
+          "documentation": 2,
+          "implementation": 3
+        },
+        "RS.CO-3.1": {
+          "documentation": 4,
+          "implementation": 4
+        },
+        "PR.AC-4.3": {
+          "documentation": 4,
+          "implementation": 3
+        },
+        "DE.AE-3.1": {
+          "documentation": 2,
+          "implementation": 4
         }
       }
     }

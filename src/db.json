@@ -36,7 +36,7 @@
       "firstName": "Sylvain",
       "lastName": "Lebailly",
       "email": "sylvain@anderson.be",
-      "password": "$2a$10$uDOD6i8TyXmuIzwIPKh31OOYNN9TphvpO/uzyNtH/YHaiGe3PzzFa",
+      "password": "$2a$10$D5aQjQ8JRl3BhYChSssp1eBPuB35/EplQt0I9iOxMrtM2irXN5NVa",
       "cyfunLevel": "basic",
       "id": "0279094c-4110-4993-8fae-c9e115106a7b"
     }
@@ -279,12 +279,14 @@
     "PR.AC-3.1": {
       "userStatuses": {
         "02ef88a4-80a7-43d5-bd6d-d8117aed7077": "completed",
-        "9b25825e-0476-44ac-9623-9ee9624751a6": "completed"
+        "9b25825e-0476-44ac-9623-9ee9624751a6": "completed",
+        "0279094c-4110-4993-8fae-c9e115106a7b": "completed"
       }
     },
     "ID.AM-2.1": {
       "userStatuses": {
-        "9b25825e-0476-44ac-9623-9ee9624751a6": "completed"
+        "9b25825e-0476-44ac-9623-9ee9624751a6": "completed",
+        "0279094c-4110-4993-8fae-c9e115106a7b": "completed"
       }
     },
     "PR.AC-1.1": {
@@ -293,7 +295,7 @@
         "ed07ad25-690b-492f-b63f-e9a905217ec3": "completed",
         "9b25825e-0476-44ac-9623-9ee9624751a6": "completed",
         "4664dc5b-cf0c-4a75-8ea0-9a13772abe11": "completed",
-        "0279094c-4110-4993-8fae-c9e115106a7b": "completed"
+        "0279094c-4110-4993-8fae-c9e115106a7b": "in-progress"
       }
     },
     "PR.IP-4.1": {
@@ -308,7 +310,8 @@
     },
     "RS.RP-1.1": {
       "userStatuses": {
-        "9b25825e-0476-44ac-9623-9ee9624751a6": "completed"
+        "9b25825e-0476-44ac-9623-9ee9624751a6": "completed",
+        "0279094c-4110-4993-8fae-c9e115106a7b": "in-progress"
       }
     },
     "DE.AE-3.1": {
@@ -319,7 +322,8 @@
     "PR.AC-3.2": {
       "userStatuses": {
         "02ef88a4-80a7-43d5-bd6d-d8117aed7077": "completed",
-        "9b25825e-0476-44ac-9623-9ee9624751a6": "completed"
+        "9b25825e-0476-44ac-9623-9ee9624751a6": "completed",
+        "0279094c-4110-4993-8fae-c9e115106a7b": "completed"
       }
     },
     "PR.AC-4.4": {
@@ -330,14 +334,16 @@
     "PR.AC-5.1": {
       "userStatuses": {
         "02ef88a4-80a7-43d5-bd6d-d8117aed7077": "completed",
-        "ed07ad25-690b-492f-b63f-e9a905217ec3": "completed"
+        "ed07ad25-690b-492f-b63f-e9a905217ec3": "completed",
+        "0279094c-4110-4993-8fae-c9e115106a7b": "completed"
       }
     },
     "PR.AT-1.1": {
       "userStatuses": {
         "02ef88a4-80a7-43d5-bd6d-d8117aed7077": "completed",
         "9b25825e-0476-44ac-9623-9ee9624751a6": "completed",
-        "ed07ad25-690b-492f-b63f-e9a905217ec3": "completed"
+        "ed07ad25-690b-492f-b63f-e9a905217ec3": "completed",
+        "0279094c-4110-4993-8fae-c9e115106a7b": "completed"
       }
     },
     "PR.DS-3.1": {
@@ -358,24 +364,28 @@
     },
     "RC.RP-1.1": {
       "userStatuses": {
-        "9b25825e-0476-44ac-9623-9ee9624751a6": "completed"
+        "9b25825e-0476-44ac-9623-9ee9624751a6": "completed",
+        "0279094c-4110-4993-8fae-c9e115106a7b": "completed"
       }
     },
     "ID.AM-3.1": {
       "userStatuses": {
-        "9b25825e-0476-44ac-9623-9ee9624751a6": "completed"
+        "9b25825e-0476-44ac-9623-9ee9624751a6": "completed",
+        "0279094c-4110-4993-8fae-c9e115106a7b": "completed"
       }
     },
     "ID.AM-5.1": {
       "userStatuses": {
-        "9b25825e-0476-44ac-9623-9ee9624751a6": "completed"
+        "9b25825e-0476-44ac-9623-9ee9624751a6": "completed",
+        "0279094c-4110-4993-8fae-c9e115106a7b": "completed"
       }
     },
     "PR.AC-2.1": {
       "userStatuses": {
         "02ef88a4-80a7-43d5-bd6d-d8117aed7077": "completed",
         "9b25825e-0476-44ac-9623-9ee9624751a6": "completed",
-        "ed07ad25-690b-492f-b63f-e9a905217ec3": "completed"
+        "ed07ad25-690b-492f-b63f-e9a905217ec3": "completed",
+        "0279094c-4110-4993-8fae-c9e115106a7b": "completed"
       }
     },
     "PR.AC-4.3": {
@@ -397,7 +407,8 @@
     "PR.AC-5.2": {
       "userStatuses": {
         "02ef88a4-80a7-43d5-bd6d-d8117aed7077": "completed",
-        "ed07ad25-690b-492f-b63f-e9a905217ec3": "completed"
+        "ed07ad25-690b-492f-b63f-e9a905217ec3": "completed",
+        "0279094c-4110-4993-8fae-c9e115106a7b": "completed"
       }
     },
     "PR.MA-1.1": {
@@ -439,7 +450,8 @@
     },
     "DE.CM-3.1": {
       "userStatuses": {
-        "9b25825e-0476-44ac-9623-9ee9624751a6": "completed"
+        "9b25825e-0476-44ac-9623-9ee9624751a6": "completed",
+        "0279094c-4110-4993-8fae-c9e115106a7b": "completed"
       }
     },
     "ID.AM-1.3": {
@@ -456,7 +468,8 @@
     },
     "DE.CM-1.1": {
       "userStatuses": {
-        "9b25825e-0476-44ac-9623-9ee9624751a6": "completed"
+        "9b25825e-0476-44ac-9623-9ee9624751a6": "completed",
+        "0279094c-4110-4993-8fae-c9e115106a7b": "completed"
       }
     },
     "DE.CM-4.1": {

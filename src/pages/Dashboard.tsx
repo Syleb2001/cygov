@@ -3,10 +3,10 @@ import { Routes, Route, Link } from 'react-router-dom';
 import { 
   BarChart3, FileCheck, AlertCircle, ChevronDown, ChevronUp, 
   Info, UserCircle, Filter, Calendar, Clock, PieChart, Shield, 
-  FileText, Link as LinkIcon, Image as ImageIcon, X, Bell, Star 
+  FileText, Link as LinkIcon, Image as ImageIcon, X, Bell, Star, Cog 
 } from 'lucide-react';
 import { functions } from '../data/functions';
-import type { Function, Category, Subcategory, Requirement, POI } from '../types';
+import type { Function, Category, Subcategory, Requirement, POI, MaturityScore } from '../types';
 import { useAuth } from '../context/AuthContext';
 import { useNotifications } from '../context/NotificationsContext';
 import NotificationsDropdown from '../components/NotificationsDropdown';
@@ -194,10 +194,11 @@ export default function Dashboard() {
   });
   const [showPoiViewModal, setShowPoiViewModal] = useState(false);
   const [selectedPoiForView, setSelectedPoiForView] = useState<POI | null>(null);
-  const [maturityScores, setMaturityScores] = useState<Record<string, number>>({});
+  const [maturityScores, setMaturityScores] = useState<Record<string, MaturityScore>>({});
   const [showMaturityModal, setShowMaturityModal] = useState(false);
   const [selectedRequirementForMaturity, setSelectedRequirementForMaturity] = useState<string | null>(null);
   const [selectedMaturityLevel, setSelectedMaturityLevel] = useState<number>(1);
+  const [selectedMaturityType, setSelectedMaturityType] = useState<'documentation' | 'implementation'>('documentation');
 
   useEffect(() => {
     const fetchControlStatuses = async () => {
@@ -490,7 +491,7 @@ export default function Dashboard() {
     return filtered;
   };
 
-  const updateMaturityLevel = async (requirementId: string, level: number) => {
+  const updateMaturityLevel = async (requirementId: string, type: 'documentation' | 'implementation', level: number) => {
     if (isReadOnly) {
       setError('Cannot update maturity level in read-only mode');
       return;
@@ -499,12 +500,18 @@ export default function Dashboard() {
     if (!user?.id) return;
     
     try {
+      const currentScore = maturityScores[requirementId] || { documentation: 1, implementation: 1 };
+      const newScore = {
+        ...currentScore,
+        [type]: level
+      };
+
       const response = await fetch('/api/maturity', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
           requirementId, 
-          level,
+          scores: newScore,
           userId: user.id 
         })
       });
@@ -516,13 +523,13 @@ export default function Dashboard() {
       // Mettre à jour localement
       setMaturityScores(prev => ({
         ...prev,
-        [requirementId]: level
+        [requirementId]: newScore
       }));
       
       addNotification({
         type: 'status',
         title: 'Maturity Level Updated',
-        message: `Maturity level for ${requirementId} has been updated to ${level}`,
+        message: `${type.charAt(0).toUpperCase() + type.slice(1)} maturity level for ${requirementId} has been updated to ${level}`,
         controlId: requirementId
       });
       
@@ -923,7 +930,8 @@ export default function Dashboard() {
                                                     <button
                                                       onClick={() => {
                                                         setSelectedRequirementForMaturity(req.id);
-                                                        setSelectedMaturityLevel(maturityScores[req.id] || 1);
+                                                        setSelectedMaturityType('documentation');
+                                                        setSelectedMaturityLevel(maturityScores[req.id]?.documentation || 1);
                                                         setShowMaturityModal(true);
                                                       }}
                                                       className="p-1 text-gray-600 hover:text-gray-900 rounded-full hover:bg-gray-100"
@@ -933,15 +941,28 @@ export default function Dashboard() {
                                                       <div className="relative">
                                                         <BarChart3 className="h-4 w-4" />
                                                         {maturityScores[req.id] && (
-                                                          <div 
-                                                            className={`absolute -top-1 -right-1 w-2 h-2 rounded-full ${
-                                                              maturityScores[req.id] === 1 
-                                                                ? 'bg-red-500' 
-                                                                : maturityScores[req.id] === 2 
-                                                                  ? 'bg-yellow-500' 
-                                                                  : 'bg-green-500'
-                                                            }`} 
-                                                          />
+                                                          <div className="absolute -top-1 -right-1 flex">
+                                                            <div 
+                                                              className={`w-2 h-2 rounded-full mr-0.5 ${
+                                                                maturityScores[req.id].documentation === 1 
+                                                                  ? 'bg-red-500' 
+                                                                  : maturityScores[req.id].documentation === 2 
+                                                                    ? 'bg-yellow-500' 
+                                                                    : 'bg-blue-500'
+                                                              }`} 
+                                                              title={`Documentation: ${maturityScores[req.id].documentation}/5`}
+                                                            />
+                                                            <div 
+                                                              className={`w-2 h-2 rounded-full ${
+                                                                maturityScores[req.id].implementation === 1 
+                                                                  ? 'bg-red-500' 
+                                                                  : maturityScores[req.id].implementation === 2 
+                                                                    ? 'bg-yellow-500' 
+                                                                    : 'bg-green-500'
+                                                              }`} 
+                                                              title={`Implementation: ${maturityScores[req.id].implementation}/5`}
+                                                            />
+                                                          </div>
                                                         )}
                                                       </div>
                                                     </button>
@@ -1263,6 +1284,43 @@ export default function Dashboard() {
             </div>
             <div className="space-y-4">
               <p className="text-sm text-gray-600">Select maturity level for <span className="font-medium">{selectedRequirementForMaturity}</span></p>
+              
+              {/* Tabs for Documentation / Implementation */}
+              <div className="flex border-b border-gray-200">
+                <button
+                  onClick={() => {
+                    setSelectedMaturityType('documentation');
+                    setSelectedMaturityLevel(maturityScores[selectedRequirementForMaturity]?.documentation || 1);
+                  }}
+                  className={`px-4 py-2 text-sm font-medium ${
+                    selectedMaturityType === 'documentation'
+                      ? 'text-blue-600 border-b-2 border-blue-500'
+                      : 'text-gray-500 hover:text-gray-700'
+                  }`}
+                >
+                  <div className="flex items-center">
+                    <FileText className="w-4 h-4 mr-2" />
+                    Documentation
+                  </div>
+                </button>
+                <button
+                  onClick={() => {
+                    setSelectedMaturityType('implementation');
+                    setSelectedMaturityLevel(maturityScores[selectedRequirementForMaturity]?.implementation || 1);
+                  }}
+                  className={`px-4 py-2 text-sm font-medium ${
+                    selectedMaturityType === 'implementation'
+                      ? 'text-green-600 border-b-2 border-green-500'
+                      : 'text-gray-500 hover:text-gray-700'
+                  }`}
+                >
+                  <div className="flex items-center">
+                    <Cog className="w-4 h-4 mr-2" />
+                    Implementation
+                  </div>
+                </button>
+              </div>
+              
               <div className="flex justify-center space-x-2">
                 {[1, 2, 3, 4, 5].map(level => (
                   <button
@@ -1270,11 +1328,17 @@ export default function Dashboard() {
                     onClick={() => setSelectedMaturityLevel(level)}
                     className={`w-10 h-10 flex items-center justify-center text-sm rounded-full transition-colors ${
                       selectedMaturityLevel === level 
-                        ? level === 1 
-                            ? 'bg-red-500 text-white' 
-                            : level === 2 
-                                ? 'bg-yellow-500 text-white' 
-                                : 'bg-green-500 text-white'
+                        ? selectedMaturityType === 'documentation'
+                          ? level === 1 
+                              ? 'bg-red-500 text-white' 
+                              : level === 2 
+                                  ? 'bg-yellow-500 text-white' 
+                                  : 'bg-blue-500 text-white'
+                          : level === 1 
+                              ? 'bg-red-500 text-white' 
+                              : level === 2 
+                                  ? 'bg-yellow-500 text-white' 
+                                  : 'bg-green-500 text-white'
                         : level === 1 
                             ? 'bg-gray-200 text-gray-600 hover:bg-red-300' 
                             : level === 2 
@@ -1287,13 +1351,38 @@ export default function Dashboard() {
                 ))}
               </div>
               <div className="text-sm text-gray-600 mt-2">
-                <p className="font-medium">Maturity Levels:</p>
-                <p>1: Initial - No process documentation</p>
-                <p>2: Repeatable - Documentation exists but not reviewed</p>
-                <p>3: Defined - Approved documentation with few exceptions</p>
-                <p>4: Managed - Well-defined processes with minimal exceptions</p>
-                <p>5: Optimizing - Continuously improved processes</p>
+                <p className="font-medium">{selectedMaturityType === 'documentation' ? 'Documentation' : 'Implementation'} Maturity Levels:</p>
+                
+                {selectedMaturityType === 'documentation' ? (
+                  <>
+                    <p>1: Initial - No process documentation or not formally approved</p>
+                    <p>2: Repeatable - Documentation exists but not reviewed recently</p>
+                    <p>3: Defined - Approved documentation with few exceptions (&lt;5%)</p>
+                    <p>4: Managed - Well-defined documentation with minimal exceptions (&lt;3%)</p>
+                    <p>5: Optimizing - Continuously improved documentation (&lt;0.5% exceptions)</p>
+                  </>
+                ) : (
+                  <>
+                    <p>1: Initial - Standard process does not exist</p>
+                    <p>2: Repeatable - Ad-hoc process exists, done informally</p>
+                    <p>3: Defined - Formal process with evidence for most activities</p>
+                    <p>4: Managed - Formal process with metrics and minimal exceptions</p>
+                    <p>5: Optimizing - Consistently improving processes with near-perfect adherence</p>
+                  </>
+                )}
               </div>
+              
+              {/* Current maturity scores */}
+              {selectedRequirementForMaturity && maturityScores[selectedRequirementForMaturity] && (
+                <div className="bg-gray-50 p-3 rounded-lg text-sm">
+                  <p className="font-medium mb-1">Current Scores:</p>
+                  <div className="flex justify-between">
+                    <span>Documentation: {maturityScores[selectedRequirementForMaturity].documentation}/5</span>
+                    <span>Implementation: {maturityScores[selectedRequirementForMaturity].implementation}/5</span>
+                  </div>
+                </div>
+              )}
+              
               <div className="flex justify-end space-x-3 mt-4">
                 <button
                   onClick={() => setShowMaturityModal(false)}
@@ -1302,7 +1391,7 @@ export default function Dashboard() {
                   Cancel
                 </button>
                 <button
-                  onClick={() => selectedRequirementForMaturity && updateMaturityLevel(selectedRequirementForMaturity, selectedMaturityLevel)}
+                  onClick={() => selectedRequirementForMaturity && updateMaturityLevel(selectedRequirementForMaturity, selectedMaturityType, selectedMaturityLevel)}
                   className="px-4 py-2 bg-blue-600 border border-transparent rounded-md text-sm font-medium text-white hover:bg-blue-700"
                 >
                   Save

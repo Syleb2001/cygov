@@ -122,7 +122,7 @@ export default defineConfig({
           }
         };
 
-        const readMaturity = (): { users: Record<string, { scores: Record<string, number> }> } => {
+        const readMaturity = (): { users: Record<string, { scores: Record<string, any> }> } => {
           try {
             if (!fs.existsSync(MATURITY_PATH)) {
               const initialData = { users: {} };
@@ -192,7 +192,7 @@ export default defineConfig({
           }
         };
 
-        const writeMaturity = (data: { users: Record<string, { scores: Record<string, number> }> }) => {
+        const writeMaturity = (data: { users: Record<string, { scores: Record<string, any> }> }) => {
           try {
             const dir = path.dirname(MATURITY_PATH);
             if (!fs.existsSync(dir)) {
@@ -851,9 +851,9 @@ export default defineConfig({
               
               req.on('end', () => {
                 try {
-                  const { requirementId, level, userId } = JSON.parse(body);
+                  const { requirementId, level, userId, scores } = JSON.parse(body);
                   
-                  if (!requirementId || level === undefined || !userId) {
+                  if (!requirementId || !userId) {
                     res.statusCode = 400;
                     res.end(JSON.stringify({ error: 'Missing required fields' }));
                     return;
@@ -867,8 +867,18 @@ export default defineConfig({
                     maturityData.users[userId] = { scores: {} };
                   }
                   
-                  // Update score
-                  maturityData.users[userId].scores[requirementId] = level;
+                  // Update score based on provided data
+                  if (scores) {
+                    // New format with documentation and implementation scores
+                    maturityData.users[userId].scores[requirementId] = scores;
+                  } else if (level !== undefined) {
+                    // Legacy format with single level (for backward compatibility)
+                    maturityData.users[userId].scores[requirementId] = level;
+                  } else {
+                    res.statusCode = 400;
+                    res.end(JSON.stringify({ error: 'Either scores or level must be provided' }));
+                    return;
+                  }
                   
                   // Save changes
                   writeMaturity(maturityData);
@@ -877,7 +887,7 @@ export default defineConfig({
                   res.end(JSON.stringify({ 
                     success: true, 
                     requirementId,
-                    level 
+                    scores: maturityData.users[userId].scores[requirementId]
                   }));
                 } catch (error) {
                   console.error('Error updating maturity level:', error);
