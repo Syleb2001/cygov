@@ -30,6 +30,15 @@
       "password": "$2a$10$NeiKGXNbYRBqHMEIZbtMiei6P0v32Vpjr7fkMdAodn4jqUzlTeEji",
       "cyfunLevel": "basic",
       "id": "4664dc5b-cf0c-4a75-8ea0-9a13772abe11"
+    },
+    {
+      "companyName": "ANDERSON",
+      "firstName": "Sylvain",
+      "lastName": "Lebailly",
+      "email": "sylvain@anderson.be",
+      "password": "$2a$10$uDOD6i8TyXmuIzwIPKh31OOYNN9TphvpO/uzyNtH/YHaiGe3PzzFa",
+      "cyfunLevel": "basic",
+      "id": "0279094c-4110-4993-8fae-c9e115106a7b"
     }
   ],
   "controls": {
@@ -283,7 +292,8 @@
         "02ef88a4-80a7-43d5-bd6d-d8117aed7077": "completed",
         "ed07ad25-690b-492f-b63f-e9a905217ec3": "completed",
         "9b25825e-0476-44ac-9623-9ee9624751a6": "completed",
-        "4664dc5b-cf0c-4a75-8ea0-9a13772abe11": "completed"
+        "4664dc5b-cf0c-4a75-8ea0-9a13772abe11": "completed",
+        "0279094c-4110-4993-8fae-c9e115106a7b": "completed"
       }
     },
     "PR.IP-4.1": {

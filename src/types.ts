@@ -42,7 +42,7 @@ export interface User {
   twoFactorSecret?: string;
   twoFactorEnabled?: boolean;
   isAdmin?: boolean;
-  isActive?: boolean; // New field to track if user has completed setup
+  isActive?: boolean;
 }
 
 export interface POI {
@@ -95,11 +95,22 @@ export interface Notification {
   createdAt: string;
 }
 
-// Add types for admin panel
 export interface AdminStats {
   totalUsers: number;
   totalControls: number;
   totalNotes: number;
   totalDeadlines: number;
   totalPois: number;
+}
+
+export interface MaturityScore {
+  documentation: number;
+  implementation: number;
+}
+
+export interface MaturityLevel {
+  label: string;
+  value: number;
+  documentation: string;
+  implementation: string;
 }

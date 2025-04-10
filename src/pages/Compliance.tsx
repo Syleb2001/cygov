@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { ChevronLeft, AlertTriangle, CheckCircle, XCircle, Shield, BarChart } from 'lucide-react';
+import { ChevronLeft, AlertTriangle, CheckCircle, XCircle, Shield, BarChart, FileText, Cog } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { functions } from '../data/functions';
-import { Requirement, Function, Category, Subcategory } from '../types';
+import { Requirement, Function, Category, Subcategory, MaturityScore } from '../types';
 
 // Fonction pour filtrer les requirements selon le niveau
 function getRequirementsForLevel(requirements: Requirement[], cyfunLevel?: string): Requirement[] {
@@ -74,10 +74,17 @@ function getStatusForRequirement(reqId: string, controlStatuses: Record<string, 
   return controlStatuses[parentControlId]?.userStatuses[userId] || 'pending';
 }
 
+// Ajout de la vérification pour savoir si un requirement est accessible
+const isRequirementAccessible = (requirement: Requirement, currentLevel: string): boolean => {
+  return requirement.cyfunLevel === currentLevel || 
+         (currentLevel === 'important' && requirement.cyfunLevel === 'basic') ||
+         (currentLevel === 'essential' && ['basic', 'important'].includes(requirement.cyfunLevel));
+};
+
 export default function Compliance() {
   const { user } = useAuth();
   const [controlStatuses, setControlStatuses] = useState<Record<string, { userStatuses: Record<string, string> }>>({});
-  const [maturityScores, setMaturityScores] = useState<Record<string, number>>({});
+  const [maturityScores, setMaturityScores] = useState<Record<string, MaturityScore>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [currentLevel, setCurrentLevel] = useState(user?.cyfunLevel || 'basic');
@@ -156,7 +163,9 @@ export default function Compliance() {
           
           // Calculer pour chaque exigence
           requirements.forEach(req => {
-            const maturityScore = maturityScores[req.id] || 1; // Défaut à 1 si non défini
+            const score = maturityScores[req.id];
+            // Calculate average of documentation and implementation scores
+            const maturityScore = score ? (score.documentation + score.implementation) / 2 : 1;
             
             catMaturitySum += maturityScore;
             catRequirements++;
@@ -189,14 +198,20 @@ export default function Compliance() {
   };
 
   // Mettre à jour le niveau de maturité d'une exigence
-  const updateMaturityLevel = async (requirementId: string, level: number) => {
+  const updateMaturityLevel = async (requirementId: string, type: 'documentation' | 'implementation', level: number) => {
     try {
+      const currentScore = maturityScores[requirementId] || { documentation: 1, implementation: 1 };
+      const newScore = {
+        ...currentScore,
+        [type]: level
+      };
+
       const response = await fetch('/api/maturity', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
-          requirementId, 
-          level,
+          requirementId,
+          level: newScore,
           userId: user?.id 
         })
       });
@@ -208,11 +223,9 @@ export default function Compliance() {
       // Mettre à jour localement
       setMaturityScores(prev => ({
         ...prev,
-        [requirementId]: level
+        [requirementId]: newScore
       }));
       
-      // Fermer le modal
-      setShowMaturityModal(false);
     } catch (error) {
       console.error('Error updating maturity level:', error);
       setError(error instanceof Error ? error.message : 'Failed to update maturity level');
@@ -230,6 +243,13 @@ export default function Compliance() {
   const getMaturityLabel = (score: number) => {
     const level = maturityLevels.find(l => l.value === Math.floor(score));
     return level ? level.label : 'Unknown';
+  };
+
+  // Helper function to get the average maturity score for a requirement
+  const getAverageMaturityScore = (reqId: string): number => {
+    const score = maturityScores[reqId];
+    if (!score) return 1;
+    return (score.documentation + score.implementation) / 2;
   };
 
   if (loading) {
@@ -405,14 +425,14 @@ export default function Compliance() {
                               {/* Afficher tous les requirements, pas seulement ceux du niveau courant */}
                               <div className="space-y-3 ml-2">
                                 {subcat.requirements.map(req => {
-                                  const reqMaturity = maturityScores[req.id] || 1;
+                                  const reqMaturity = getAverageMaturityScore(req.id);
                                   const isLevelMatched = req.cyfunLevel === currentLevel || 
                                                           (currentLevel === 'important' && req.cyfunLevel === 'basic') ||
                                                           (currentLevel === 'essential' && ['basic', 'important'].includes(req.cyfunLevel));
                                   
                                   return (
                                     <div key={req.id} className={`border-b border-gray-100 pb-2 ${isLevelMatched ? '' : 'opacity-60'}`}>
-                                      <div className="flex justify-between items-center">
+                                      <div className="flex justify-between items-start">
                                         <div className="flex-1">
                                           <div className="flex items-center gap-1">
                                             <p className="text-xs font-medium">{req.id}</p>
@@ -426,39 +446,62 @@ export default function Compliance() {
                                             </span>
                                           </div>
                                           <p className="text-xs">{req.title}</p>
-                                        </div>
-                                        <div className="flex items-center space-x-2">
-                                          <div className={`text-xs font-medium px-2 py-1 rounded ${
-                                            getMaturityColor(reqMaturity, 
-                                              req.isKeyMeasure 
-                                                ? (maturityThresholds.keyMeasure[currentLevel as keyof typeof maturityThresholds.keyMeasure] as number) 
-                                                : (typeof currentThreshold === 'number' ? currentThreshold : 3)
-                                            ) === 'green' 
-                                              ? 'bg-green-100 text-green-800' 
-                                              : getMaturityColor(reqMaturity, 
-                                                req.isKeyMeasure 
-                                                  ? (maturityThresholds.keyMeasure[currentLevel as keyof typeof maturityThresholds.keyMeasure] as number) 
-                                                  : (typeof currentThreshold === 'number' ? currentThreshold : 3)
-                                              ) === 'yellow' 
-                                              ? 'bg-yellow-100 text-yellow-800' 
-                                              : 'bg-red-100 text-red-800'
-                                          }`}>
-                                            {reqMaturity}/5
+                                          
+                                          {/* Documentation Maturity */}
+                                          <div className="mt-2 flex items-center gap-2">
+                                            <div className="flex items-center">
+                                              <FileText className="h-4 w-4 text-gray-400 mr-1" />
+                                              <span className="text-xs text-gray-600">Documentation:</span>
+                                            </div>
+                                            <div className="flex">
+                                              {[1, 2, 3, 4, 5].map(level => (
+                                                <button
+                                                  key={`${req.id}-doc-${level}`}
+                                                  onClick={() => isRequirementAccessible(req, currentLevel) && updateMaturityLevel(req.id, 'documentation', level)}
+                                                  disabled={!isRequirementAccessible(req, currentLevel)}
+                                                  className={`w-6 h-6 flex items-center justify-center text-xs rounded-full ${
+                                                    maturityScores[req.id]?.documentation === level
+                                                      ? 'bg-blue-500 text-white'
+                                                      : isRequirementAccessible(req, currentLevel)
+                                                        ? 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                                                        : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                                                  }`}
+                                                >
+                                                  {level}
+                                                </button>
+                                              ))}
+                                            </div>
                                           </div>
-                                          <div className="flex">
-                                            {[1, 2, 3, 4, 5].map(level => (
-                                              <button
-                                                key={`${req.id}-${level}`}
-                                                onClick={() => updateMaturityLevel(req.id, level)}
-                                                className={`w-6 h-6 flex items-center justify-center text-xs rounded-full ${
-                                                  reqMaturity === level 
-                                                    ? 'bg-blue-500 text-white' 
-                                                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                                                }`}
-                                              >
-                                                {level}
-                                              </button>
-                                            ))}
+
+                                          {/* Implementation Maturity */}
+                                          <div className="mt-2 flex items-center gap-2">
+                                            <div className="flex items-center">
+                                              <Cog className="h-4 w-4 text-gray-400 mr-1" />
+                                              <span className="text-xs text-gray-600">Implementation:</span>
+                                            </div>
+                                            <div className="flex">
+                                              {[1, 2, 3, 4, 5].map(level => (
+                                                <button
+                                                  key={`${req.id}-impl-${level}`}
+                                                  onClick={() => isRequirementAccessible(req, currentLevel) && updateMaturityLevel(req.id, 'implementation', level)}
+                                                  disabled={!isRequirementAccessible(req, currentLevel)}
+                                                  className={`w-6 h-6 flex items-center justify-center text-xs rounded-full ${
+                                                    maturityScores[req.id]?.implementation === level
+                                                      ? 'bg-green-500 text-white'
+                                                      : isRequirementAccessible(req, currentLevel)
+                                                        ? 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                                                        : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                                                  }`}
+                                                >
+                                                  {level}
+                                                </button>
+                                              ))}
+                                            </div>
+                                          </div>
+
+                                          {/* Average Score */}
+                                          <div className="mt-2 text-xs text-gray-500">
+                                            Average Score: {reqMaturity.toFixed(1)}/5
                                           </div>
                                         </div>
                                       </div>
@@ -478,59 +521,6 @@ export default function Compliance() {
           </div>
         </div>
       </div>
-
-      {/* Modal pour définir le niveau de maturité */}
-      {showMaturityModal && selectedRequirement && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg max-w-lg w-full p-6">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">
-              Set Maturity Level for {selectedRequirement.id}
-            </h3>
-            <p className="text-sm text-gray-600 mb-4">
-              {selectedRequirement.title}
-            </p>
-
-            <div className="space-y-3 mb-6">
-              {maturityLevels.map(level => (
-                <div 
-                  key={level.value}
-                  onClick={() => setSelectedMaturityLevel(level.value)}
-                  className={`cursor-pointer p-3 rounded-lg border ${
-                    selectedMaturityLevel === level.value ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:bg-gray-50'
-                  }`}
-                >
-                  <div className="flex items-center">
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center mr-3 ${
-                      selectedMaturityLevel === level.value ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700'
-                    }`}>
-                      {level.value}
-                    </div>
-                    <div>
-                      <h4 className="font-medium">{level.label}</h4>
-                      <p className="text-xs text-gray-600 mt-1">{level.description}</p>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            <div className="flex justify-end space-x-3">
-              <button
-                onClick={() => setShowMaturityModal(false)}
-                className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded hover:bg-gray-200"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={() => updateMaturityLevel(selectedRequirement.id, selectedMaturityLevel)}
-                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded hover:bg-blue-700"
-              >
-                Save
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
