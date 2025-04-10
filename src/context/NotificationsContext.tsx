@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useAuth } from './AuthContext';
+import { v4 as uuidv4 } from 'uuid';
 import type { Notification } from '../types';
 
 interface NotificationsContextType {
@@ -38,7 +39,7 @@ export function NotificationsProvider({ children }: { children: React.ReactNode 
 
     const newNotification: Notification = {
       ...notification,
-      id: crypto.randomUUID(),
+      id: uuidv4(),
       createdAt: new Date().toISOString(),
       read: false,
     };

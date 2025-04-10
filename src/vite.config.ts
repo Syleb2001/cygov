@@ -18,6 +18,46 @@ export default defineConfig({
         const CALENDAR_PATH = path.join(process.cwd(), 'src/calendar.json');
         const POI_PATH = path.join(process.cwd(), 'src/poi.json');
         const MATURITY_PATH = path.join(process.cwd(), 'src/maturity.json');
+        const TEMP_TOKENS_PATH = path.join(process.cwd(), 'src/temp_tokens.json');
+
+        // Read temp tokens
+        const readTempTokens = (): Record<string, { email: string, companyName: string, expiresAt: string }> => {
+          try {
+            if (!fs.existsSync(TEMP_TOKENS_PATH)) {
+              fs.writeFileSync(TEMP_TOKENS_PATH, JSON.stringify({}), 'utf-8');
+              return {};
+            }
+            return JSON.parse(fs.readFileSync(TEMP_TOKENS_PATH, 'utf-8'));
+          } catch (error) {
+            console.error('Error reading temp tokens:', error);
+            return {};
+          }
+        };
+
+        // Write temp tokens
+        const writeTempTokens = (tokens: Record<string, { email: string, companyName: string, expiresAt: string }>) => {
+          try {
+            fs.writeFileSync(TEMP_TOKENS_PATH, JSON.stringify(tokens), 'utf-8');
+          } catch (error) {
+            console.error('Error writing temp tokens:', error);
+          }
+        };
+
+        // Clean expired tokens
+        const cleanExpiredTokens = () => {
+          const tokens = readTempTokens();
+          const now = new Date();
+          const validTokens = Object.entries(tokens).reduce((acc, [token, data]) => {
+            if (new Date(data.expiresAt) > now) {
+              acc[token] = data;
+            }
+            return acc;
+          }, {} as Record<string, { email: string, companyName: string, expiresAt: string }>);
+          writeTempTokens(validTokens);
+        };
+
+        // Clean expired tokens periodically
+        setInterval(cleanExpiredTokens, 1000 * 60 * 60); // Every hour
 
         const readDb = (): { 
           users: User[]; 
@@ -82,7 +122,7 @@ export default defineConfig({
           }
         };
 
-        const readMaturity = (): { users: Record<string, { scores: Record<string, number> }> } => {
+        const readMaturity = (): { users: Record<string, { scores: Record<string, any> }> } => {
           try {
             if (!fs.existsSync(MATURITY_PATH)) {
               const initialData = { users: {} };
@@ -152,7 +192,7 @@ export default defineConfig({
           }
         };
 
-        const writeMaturity = (data: { users: Record<string, { scores: Record<string, number> }> }) => {
+        const writeMaturity = (data: { users: Record<string, { scores: Record<string, any> }> }) => {
           try {
             const dir = path.dirname(MATURITY_PATH);
             if (!fs.existsSync(dir)) {
@@ -170,7 +210,7 @@ export default defineConfig({
             res.writeHead(200, {
               'Access-Control-Allow-Origin': '*',
               'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-              'Access-Control-Allow-Headers': 'Content-Type',
+              'Access-Control-Allow-Headers': 'Content-Type, Authorization',
             });
             res.end();
             return;
@@ -178,65 +218,169 @@ export default defineConfig({
 
           res.setHeader('Access-Control-Allow-Origin', '*');
           res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-          res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+          res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
           res.setHeader('Content-Type', 'application/json');
 
-          if (req.url?.startsWith('/api/maturity')) {
-            const maturityData = readMaturity();
+          // Users API
+          if (req.url?.startsWith('/api/users/')) {
+            const db = readDb();
 
-            if (req.method === 'GET') {
-              const url = new URL(req.url, `http://${req.headers.host}`);
-              const userId = url.searchParams.get('userId');
-              
-              if (!userId) {
-                res.statusCode = 400;
-                res.end(JSON.stringify({ error: 'User ID is required' }));
+            if (req.url === '/api/users/company' && req.method === 'GET') {
+              const authHeader = req.headers.authorization;
+              if (!authHeader) {
+                res.statusCode = 401;
+                res.end(JSON.stringify({ error: 'Unauthorized' }));
                 return;
               }
 
-              const userScores = maturityData.users[userId]?.scores || {};
-              res.end(JSON.stringify({ scores: userScores }));
+              const token = authHeader.split(' ')[1];
+              const user = db.users.find(u => u.id === token);
+              if (!user) {
+                res.statusCode = 403;
+                res.end(JSON.stringify({ error: 'Forbidden' }));
+                return;
+              }
+
+              const companyUsers = db.users.filter(u => 
+                u.companyName === user.companyName && u.id !== user.id
+              );
+
+              const safeUsers = companyUsers.map(({ password, twoFactorSecret, ...user }) => user);
+              res.end(JSON.stringify({ users: safeUsers }));
               return;
             }
 
-            if (req.method === 'POST') {
+            if (req.url === '/api/users/create' && req.method === 'POST') {
+              const authHeader = req.headers.authorization;
+              if (!authHeader) {
+                res.statusCode = 401;
+                res.end(JSON.stringify({ error: 'Unauthorized' }));
+                return;
+              }
+
+              const token = authHeader.split(' ')[1];
+              const adminUser = db.users.find(u => u.id === token);
+              if (!adminUser) {
+                res.statusCode = 403;
+                res.end(JSON.stringify({ error: 'Forbidden' }));
+                return;
+              }
+
               let body = '';
               req.on('data', chunk => {
                 body += chunk.toString();
               });
 
-              req.on('end', () => {
+              req.on('end', async () => {
                 try {
-                  const { requirementId, level, userId } = JSON.parse(body);
+                  const userData = JSON.parse(body);
                   
-                  if (!requirementId || !userId || typeof level !== 'number' || level < 1 || level > 5) {
+                  if (!userData.email || !userData.firstName || !userData.lastName || !userData.companyName) {
                     res.statusCode = 400;
-                    res.end(JSON.stringify({ error: 'Invalid maturity data' }));
+                    res.end(JSON.stringify({ error: 'Missing required fields' }));
                     return;
                   }
 
-                  if (!maturityData.users[userId]) {
-                    maturityData.users[userId] = { scores: {} };
+                  const existingUser = db.users.find(u => u.email === userData.email);
+                  if (existingUser) {
+                    res.statusCode = 400;
+                    res.end(JSON.stringify({ error: 'User already exists' }));
+                    return;
                   }
 
-                  maturityData.users[userId].scores[requirementId] = level;
-                  writeMaturity(maturityData);
+                  const setupToken = uuidv4();
+                  const expiresAt = new Date();
+                  expiresAt.setHours(expiresAt.getHours() + 24);
 
+                  const tokens = readTempTokens();
+                  tokens[setupToken] = {
+                    email: userData.email,
+                    companyName: userData.companyName,
+                    expiresAt: expiresAt.toISOString()
+                  };
+                  writeTempTokens(tokens);
+
+                  const newUser = {
+                    ...userData,
+                    id: uuidv4(),
+                    twoFactorEnabled: false,
+                    isActive: false
+                  };
+
+                  db.users.push(newUser);
+                  writeDb(db);
+
+                  const setupUrl = `/setup-password?token=${setupToken}`;
                   res.end(JSON.stringify({ 
                     success: true,
-                    requirementId,
-                    level
+                    setupUrl
                   }));
                 } catch (error) {
-                  console.error('Error updating maturity:', error);
+                  console.error('Error creating user:', error);
                   res.statusCode = 500;
-                  res.end(JSON.stringify({ error: 'Failed to update maturity level' }));
+                  res.end(JSON.stringify({ error: 'Failed to create user' }));
+                }
+              });
+              return;
+            }
+
+            if (req.url === '/api/users/setup-password' && req.method === 'POST') {
+              let body = '';
+              req.on('data', chunk => {
+                body += chunk.toString();
+              });
+
+              req.on('end', async () => {
+                try {
+                  const { token, password } = JSON.parse(body);
+                  
+                  if (!token || !password) {
+                    res.statusCode = 400;
+                    res.end(JSON.stringify({ error: 'Missing required fields' }));
+                    return;
+                  }
+
+                  const tokens = readTempTokens();
+                  const tokenData = tokens[token];
+                  
+                  if (!tokenData || new Date(tokenData.expiresAt) < new Date()) {
+                    res.statusCode = 400;
+                    res.end(JSON.stringify({ error: 'Invalid or expired token' }));
+                    return;
+                  }
+
+                  const userIndex = db.users.findIndex(u => u.email === tokenData.email);
+                  if (userIndex === -1) {
+                    res.statusCode = 404;
+                    res.end(JSON.stringify({ error: 'User not found' }));
+                    return;
+                  }
+
+                  const salt = await bcrypt.genSalt(10);
+                  const hashedPassword = await bcrypt.hash(password, salt);
+
+                  db.users[userIndex] = {
+                    ...db.users[userIndex],
+                    password: hashedPassword,
+                    isActive: true
+                  };
+
+                  delete tokens[token];
+                  writeTempTokens(tokens);
+                  writeDb(db);
+
+                  res.end(JSON.stringify({ success: true }));
+                } catch (error) {
+                  console.error('Error setting up password:', error);
+                  res.statusCode = 500;
+                  res.end(JSON.stringify({ error: 'Failed to set up password' }));
                 }
               });
               return;
             }
           }
 
+          // POIs API
           if (req.url?.startsWith('/api/pois')) {
             const poi = readPoi();
             const db = readDb();
@@ -363,6 +507,7 @@ export default defineConfig({
             }
           }
 
+          // Deadlines API
           if (req.url?.startsWith('/api/deadlines')) {
             const calendar = readCalendar();
             const db = readDb();
@@ -491,6 +636,7 @@ export default defineConfig({
             }
           }
 
+          // Notes API
           if (req.url?.startsWith('/api/notes')) {
             const chat = readChat();
 
@@ -611,21 +757,18 @@ export default defineConfig({
             }
           }
 
+          // Controls API
           if (req.url?.startsWith('/api/controls')) {
             if (req.method === 'GET') {
               try {
                 const db = readDb();
-                if (!db.controls) {
-                  db.controls = {};
-                }
-                res.end(JSON.stringify({ controls: db.controls }));
-                return;
+                res.end(JSON.stringify({ controls: db.controls || {} }));
               } catch (error) {
                 console.error('Error fetching controls:', error);
                 res.statusCode = 500;
                 res.end(JSON.stringify({ error: 'Failed to fetch controls' }));
-                return;
               }
+              return;
             }
 
             if (req.method === 'POST') {
@@ -675,6 +818,185 @@ export default defineConfig({
             }
           }
 
+          // Maturity API
+          if (req.url?.startsWith('/api/maturity')) {
+            if (req.method === 'GET') {
+              try {
+                const maturityData = readMaturity();
+                const url = new URL(req.url, `http://${req.headers.host}`);
+                const userId = url.searchParams.get('userId');
+                
+                if (!userId) {
+                  res.statusCode = 400;
+                  res.end(JSON.stringify({ error: 'User ID is required' }));
+                  return;
+                }
+                
+                const userScores = maturityData.users[userId]?.scores || {};
+                res.statusCode = 200;
+                res.end(JSON.stringify({ scores: userScores }));
+              } catch (error) {
+                console.error('Error fetching maturity data:', error);
+                res.statusCode = 500;
+                res.end(JSON.stringify({ error: 'Failed to fetch maturity data' }));
+              }
+              return;
+            }
+            
+            if (req.method === 'POST') {
+              let body = '';
+              req.on('data', chunk => {
+                body += chunk.toString();
+              });
+              
+              req.on('end',() => {
+                try {
+                  const { requirementId, level, userId, scores } = JSON.parse(body);
+                  
+                  if (!requirementId || !userId) {
+                    res.statusCode = 400;
+                    res.end(JSON.stringify({ error: 'Missing required fields' }));
+                    return;
+                  }
+                  
+                  // Read current maturity data
+                  const maturityData = readMaturity();
+                  
+                  // Ensure user data exists
+                  if (!maturityData.users[userId]) {
+                    maturityData.users[userId] = { scores: {} };
+                  }
+                  
+                  // Update score based on provided data
+                  if (scores) {
+                    // New format with documentation and implementation scores
+                    maturityData.users[userId].scores[requirementId] = scores;
+                  } else if (level !== undefined) {
+                    // Legacy format with single level (for backward compatibility)
+                    maturityData.users[userId].scores[requirementId] = level;
+                  } else {
+                    res.statusCode = 400;
+                    res.end(JSON.stringify({ error: 'Either scores or level must be provided' }));
+                    return;
+                  }
+                  
+                  // Save changes
+                  writeMaturity(maturityData);
+                  
+                  res.statusCode = 200;
+                  res.end(JSON.stringify({ 
+                    success: true, 
+                    requirementId,
+                    scores: maturityData.users[userId].scores[requirementId]
+                  }));
+                } catch (error) {
+                  console.error('Error updating maturity level:', error);
+                  res.statusCode = 500;
+                  res.end(JSON.stringify({ error: 'Failed to update maturity level' }));
+                }
+              });
+              return;
+            }
+          }
+
+          // Admin API
+          if (req.url?.startsWith('/api/admin/')) {
+            const db = readDb();
+            const chat = readChat();
+            const calendar = readCalendar();
+            const poi = readPoi();
+
+            // Check if user is admin
+            const authHeader = req.headers.authorization;
+            if (!authHeader) {
+              res.statusCode = 401;
+              res.end(JSON.stringify({ error: 'Unauthorized' }));
+              return;
+            }
+
+            const token = authHeader.split(' ')[1];
+            const user = db.users.find(u => u.id === token);
+            if (!user?.isAdmin) {
+              res.statusCode = 403;
+              res.end(JSON.stringify({ error: 'Forbidden' }));
+              return;
+            }
+
+            if (req.url === '/api/admin/users') {
+              // Remove sensitive data before sending
+              const safeUsers = db.users.map(({ password, twoFactorSecret, ...user }) => user);
+              res.end(JSON.stringify({ 
+                users: safeUsers,
+                controls: db.controls
+              }));
+              return;
+            }
+
+            if (req.url === '/api/admin/notes') {
+              res.end(JSON.stringify({ notes: chat.notes }));
+              return;
+            }
+
+            if (req.url === '/api/admin/deadlines') {
+              res.end(JSON.stringify({ deadlines: calendar.deadlines }));
+              return;
+            }
+
+            if (req.url === '/api/admin/pois') {
+              res.end(JSON.stringify({ pois: poi.pois }));
+              return;
+            }
+
+            // Admin password update endpoint
+            if (req.url === '/api/admin/password' && req.method === 'POST') {
+              let body = '';
+              req.on('data', chunk => {
+                body += chunk.toString();
+              });
+
+              req.on('end', async () => {
+                try {
+                  const { email, newPassword } = JSON.parse(body);
+                  
+                  if (!email || !newPassword) {
+                    res.statusCode = 400;
+                    res.end(JSON.stringify({ error: 'Email and new password are required' }));
+                    return;
+                  }
+
+                  const userIndex = db.users.findIndex(u => u.email === email);
+                  
+                  if (userIndex === -1) {
+                    res.statusCode = 404;
+                    res.end(JSON.stringify({ error: 'User not found' }));
+                    return;
+                  }
+
+                  const salt = await bcrypt.genSalt(10);
+                  const hashedPassword = await bcrypt.hash(newPassword, salt);
+
+                  db.users[userIndex] = {
+                    ...db.users[userIndex],
+                    password: hashedPassword
+                  };
+
+                  writeDb(db);
+                  res.end(JSON.stringify({ success: true }));
+                } catch (error) {
+                  console.error('Error updating password:', error);
+                  res.statusCode = 500;
+                  res.end(JSON.stringify({ error: 'Failed to update password' }));
+                }
+              });
+              return;
+            }
+
+            res.statusCode = 404;
+            res.end(JSON.stringify({ error: 'Admin endpoint not found' }));
+            return;
+          }
+
+          // Auth API
           if (req.url?.startsWith('/api/auth/')) {
             if (req.method === 'POST') {
               let body = '';
@@ -813,14 +1135,6 @@ export default defineConfig({
                       return;
                     }
 
-                    if (data.userId) {
-                      Object.keys(db.controls).forEach(controlId => {
-                        if (db.controls[controlId].userStatuses && db.controls[controlId].userStatuses[data.userId]) {
-                          delete db.controls[controlId].userStatuses[data.userId];
-                        }
-                      });
-                    }
-
                     db.users[userIndex] = {
                       ...db.users[userIndex],
                       cyfunLevel: data.cyfunLevel
@@ -859,7 +1173,6 @@ export default defineConfig({
                     res.end(JSON.stringify({
                       secret: secret.base32,
                       otpAuthUrl: secret.otpauth_url
-                
                     }));
                     return;
                   }
@@ -875,13 +1188,13 @@ export default defineConfig({
                     }
 
                     const verified = speakeasy.totp.verify({
-                      secret: user.twoFactorSecret,
+                      secret: data.secret,
                       encoding: 'base32',
                       token: data.token
                     });
 
                     if (!verified) {
-                      res.statusCode = 401;
+                      res.statusCode = 400;
                       res.end(JSON.stringify({ error: 'Invalid verification code' }));
                       return;
                     }
