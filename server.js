@@ -9,8 +9,6 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
 import { v4 as uuidv4 } from 'uuid';
-import https from 'https';
-import fs from 'fs';
 
 // Import routes
 import authRoutes from './src/routes/auth.js';
@@ -20,6 +18,7 @@ import notesRoutes from './src/routes/notes.js';
 import deadlinesRoutes from './src/routes/deadlines.js';
 import poisRoutes from './src/routes/pois.js';
 import adminRoutes from './src/routes/admin.js';
+import userRoutes from './src/routes/users.js';
 import { readTempTokens, writeTempTokens } from './src/utils/db.js';
 
 // Configuration
@@ -51,15 +50,27 @@ app.use(cors(corsOptions));
 app.use(helmet({
   contentSecurityPolicy: false,
   crossOriginEmbedderPolicy: false,
-  crossOriginResourcePolicy: { policy: "cross-origin" },
-  crossOriginOpenerPolicy: { policy: "same-origin" }
+  crossOriginResourcePolicy: { policy: "cross-origin" }
 }));
 app.use(hpp());
 app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
 app.use(compression());
 app.use(express.json({ limit: '10kb' }));
 
-// Serve static files with correct CORS headers
+// API Routes - make sure these come before static files
+app.use('/api/auth', authRoutes);
+app.use('/api/users', userRoutes);
+app.use('/api/controls', controlRoutes);
+app.use('/api/maturity', maturityRoutes);
+app.use('/api/notes', notesRoutes);
+app.use('/api/deadlines', deadlinesRoutes);
+app.use('/api/pois', poisRoutes);
+app.use('/api/admin', adminRoutes);
+
+// Handle preflight requests
+app.options('*', cors(corsOptions));
+
+// Serve static files with correct headers
 app.use(express.static(path.join(__dirname, 'dist'), {
   setHeaders: (res, path) => {
     res.set('Access-Control-Allow-Origin', '*');
@@ -81,19 +92,7 @@ const cleanExpiredTokens = () => {
 };
 setInterval(cleanExpiredTokens, 1000 * 60 * 60); // Every hour
 
-// API Routes
-app.use('/api/auth', authRoutes);
-app.use('/api/controls', controlRoutes);
-app.use('/api/maturity', maturityRoutes);
-app.use('/api/notes', notesRoutes);
-app.use('/api/deadlines', deadlinesRoutes);
-app.use('/api/pois', poisRoutes);
-app.use('/api/admin', adminRoutes);
-
-// Handle preflight requests
-app.options('*', cors(corsOptions));
-
-// Serve React app for all other routes
+// Serve React app for all other routes - this must come after API routes
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'dist', 'index.html'));
 });
@@ -122,7 +121,7 @@ process.on('SIGTERM', () => {
   });
 });
 
-// Create HTTP server
+// Start server
 app.listen(PORT, () => {
-  console.log(`HTTP server running in ${process.env.NODE_ENV} mode on port ${PORT}`);
+  console.log(`Server running in ${process.env.NODE_ENV} mode on port ${PORT}`);
 });

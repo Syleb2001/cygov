@@ -66,6 +66,122 @@ router.post('/login', async (req, res) => {
   }
 });
 
-// Add other auth routes (2FA, password change, etc.)
+router.post('/update-level', async (req, res) => {
+  try {
+    const { email, cyfunLevel } = req.body;
+    const db = readDb();
+    const userIndex = db.users.findIndex(u => u.email === email);
+
+    if (userIndex === -1) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    db.users[userIndex] = {
+      ...db.users[userIndex],
+      cyfunLevel
+    };
+
+    writeDb(db);
+
+    const { password, twoFactorSecret, ...userWithoutPassword } = db.users[userIndex];
+    res.json({ user: userWithoutPassword });
+  } catch (error) {
+    console.error('Error updating security level:', error);
+    res.status(500).json({ error: 'Failed to update security level' });
+  }
+});
+
+router.post('/verify-2fa', async (req, res) => {
+  try {
+    const { email, token, secret } = req.body;
+    const db = readDb();
+    const user = db.users.find(u => u.email === email);
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const verified = speakeasy.totp.verify({
+      secret: secret || user.twoFactorSecret,
+      encoding: 'base32',
+      token
+    });
+
+    if (!verified) {
+      return res.status(400).json({ error: 'Invalid verification code' });
+    }
+
+    if (secret) {
+      const userIndex = db.users.findIndex(u => u.email === email);
+      db.users[userIndex] = {
+        ...user,
+        twoFactorSecret: secret,
+        twoFactorEnabled: true
+      };
+      writeDb(db);
+    }
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error('2FA verification error:', error);
+    res.status(500).json({ error: 'Failed to verify 2FA code' });
+  }
+});
+
+router.post('/setup-2fa', async (req, res) => {
+  try {
+    const { email } = req.body;
+    const db = readDb();
+    const user = db.users.find(u => u.email === email);
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const secret = speakeasy.generateSecret({
+      name: `AuditGov (${email})`
+    });
+
+    res.json({
+      secret: secret.base32,
+      otpAuthUrl: secret.otpauth_url
+    });
+  } catch (error) {
+    console.error('2FA setup error:', error);
+    res.status(500).json({ error: 'Failed to setup 2FA' });
+  }
+});
+
+router.post('/change-password', async (req, res) => {
+  try {
+    const { email, currentPassword, newPassword } = req.body;
+    const db = readDb();
+    const user = db.users.find(u => u.email === email);
+
+    if (!user) {
+      return res.status(401).json({ error: 'User not found' });
+    }
+
+    const validPassword = await bcrypt.compare(currentPassword, user.password);
+    if (!validPassword) {
+      return res.status(401).json({ error: 'Current password is incorrect' });
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(newPassword, salt);
+
+    const userIndex = db.users.findIndex(u => u.email === email);
+    db.users[userIndex] = {
+      ...user,
+      password: hashedPassword
+    };
+    
+    writeDb(db);
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Password change error:', error);
+    res.status(500).json({ error: 'Failed to change password' });
+  }
+});
 
 export default router;
